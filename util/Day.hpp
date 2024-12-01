@@ -41,6 +41,12 @@ public:
         };
     }
 
+    static void assert(bool b, const std::string& r = "No reason given") {
+        if (b) return;
+
+        throw std::logic_error("Assertion error, reason: " + r);
+    }
+
     void solve() {
         parse(text);
         v1();
