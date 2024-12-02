@@ -60,7 +60,8 @@ CLASS_DEF(DAY) {
     }
 
     void parseBenchReset() override {
-
+        left.clear();
+        right.clear();
     }
 
     private:
