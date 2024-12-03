@@ -23,6 +23,16 @@ enum class State : uint8_t {
     DIGIT_2_2,
     DIGIT_2_3,
     PAREN_CLOSE,
+
+    D,
+    D0,
+    DO_PAREN,
+    DO_FUNC,
+    DON,
+    DON_APO,
+    DON_APO_T,
+    DON_APO_T_PAREN,
+    DON_APO_T_FUNC
 };
 
 struct MachineState {
