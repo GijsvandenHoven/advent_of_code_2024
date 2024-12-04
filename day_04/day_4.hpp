@@ -126,10 +126,6 @@ NAMESPACE_DEF(DAY) {
             static constexpr auto d = [](int d) { return _(d,d); };
             static constexpr auto c = [](int x) { return _(x, -x); };
             static constexpr std::array<std::array<std::pair<int,int>,3>, 8> deltas = {{
-                { x(0), x(1), x(2) }, // left
-                { x(0), x(-1), x(-2) }, // right
-                { y(0), y(1), y(2) }, // up
-                { y(0), y(-1), y(-2) }, // down
                 { d(0), d(1), d(2) }, // diag down right
                 { d(0), d(-1), d(-2) }, // diag up left
                 { c(0), c(1), c(2) }, // diag down left
@@ -153,17 +149,16 @@ NAMESPACE_DEF(DAY) {
                         seek += value;
                     }
 
-                    if (seek == "MAS" && i >= 4) {
+                    if (seek == "MAS") {
                         // the position of 'A' is at offsets[1].
                         // We can register this as the centerpoint of a 'MAS', regardless of its direction.
                         // If  we insert this centerpoint into a set, we know we have found X-MAS when the centerpoint already exists.
-                        // the && i>= 4 is for ensuring any 'MAS' we found is diagonal (i.e. part of an X-MAS)
+                        // Recall that we only searched diagonal, so we have no false positives here.
                         auto centerpoint = offsets[1];
                         centerpoint.first += xbase;
                         centerpoint.second += ybase;
                         auto [_, novel] = diag_mas_centerpoints.emplace(centerpoint);
                         if (! novel) {
-                            std::cout << "MAS center at " << centerpoint.first << ", " << centerpoint.second << "\n";
                             ++x_mas_found;
                         }
                     }
