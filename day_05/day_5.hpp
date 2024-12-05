@@ -93,6 +93,10 @@ CLASS_DEF(DAY) {
         return true;
     }
 
+    void fixPrint(PrintOrder& p) const { // todo
+
+    }
+
     void v1() const override {
         int r = std::accumulate(orders.begin(), orders.end(), 0, [this](int sum, const PrintOrder& p) {
             bool printable = canPrint(p);
@@ -102,7 +106,16 @@ CLASS_DEF(DAY) {
     }
 
     void v2() const override {
-        reportSolution(0);
+        int sum = 0;
+        for (auto& p : orders) {
+            if (! canPrint(p)) {
+                PrintOrder needFix = p;
+                fixPrint(needFix);
+
+                sum += needFix.middle();
+            }
+        }
+        reportSolution(sum);
     }
 
     void parseBenchReset() override {
