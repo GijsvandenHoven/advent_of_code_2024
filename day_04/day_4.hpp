@@ -169,7 +169,7 @@ NAMESPACE_DEF(DAY) {
         }
 
         void parseBenchReset() override {
-
+            g.clear();
         }
 
         private:

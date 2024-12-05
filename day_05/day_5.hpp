@@ -19,7 +19,7 @@ struct PrintOrder {
         }
     }
 
-    int middle() const {
+    [[nodiscard]] int middle() const {
         return need[need.size()/2];
     }
 
@@ -35,6 +35,24 @@ inline std::ostream& operator<<(std::ostream& os, const PrintOrder& po) {
     os << "\n}";
     return os;
 }
+
+struct DAG {
+    DAG() : value(-1) {}
+
+    DAG(int v, const std::set<int>& deps, const std::set<int>& scope) {
+        value = v;
+
+        // intersect deps and scope.
+        for (auto d : deps) {
+            if (scope.contains(d)) {
+                in.emplace(d);
+            }
+        }
+    }
+
+    int value;
+    std::set<int> in;
+};
 
 CLASS_DEF(DAY) {
     public:
@@ -93,8 +111,34 @@ CLASS_DEF(DAY) {
         return true;
     }
 
-    void fixPrint(PrintOrder& p) const { // todo
+    void fixPrint(PrintOrder& p) const {
+        std::unordered_map<int, DAG> dag;
+        for (auto val : p.need) {
+            auto iter = deps.find(val);
+            if (iter == deps.end()) {
+                throw std::logic_error("not found");
+            }
+            dag[val] = DAG(val, iter->second, p.updates);
+        }
 
+        std::set<int> printed;
+        p.need.clear();
+        while (p.need.size() < p.updates.size()) {
+            // find next in DAG
+            for (auto& [k, v] : dag) {
+                bool can = true;
+                if (printed.contains(k)) {
+                    continue;
+                }
+                for (auto& prereq : v.in) {
+                    can = can && printed.contains(prereq);
+                }
+                if (can){
+                    p.need.emplace_back(k);
+                    printed.emplace(k);
+                }
+            }
+        }
     }
 
     void v1() const override {
@@ -119,7 +163,8 @@ CLASS_DEF(DAY) {
     }
 
     void parseBenchReset() override {
-
+        deps.clear();
+        orders.clear();
     }
 
     private:
