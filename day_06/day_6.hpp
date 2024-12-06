@@ -17,8 +17,6 @@ enum class Facing {
 };
 
 struct GridNavigator {
-    virtual ~GridNavigator() = default;
-
     std::pair<int, int> pos = {-1,-1};
     Facing f = Facing::N;
 
@@ -149,7 +147,7 @@ inline std::ostream& operator<<(std::ostream& os, const Grid& g) {
         g.guard.f == Facing::N ? 'N' : g.guard.f == Facing::S ? 'S' : g.guard.f == Facing::E ? 'E' : g.guard.f == Facing::W ? 'W' : '?'
     ) << " }\n\t";
     for (auto& l : g) {
-        for (auto c : l) {
+        for (const auto c : l) {
             os << c;
         }
         os << "\n\t";
@@ -181,7 +179,7 @@ CLASS_DEF(DAY) {
 
         int sum = 0;
         for (auto& l : copy) {
-            for (auto c : l) {
+            for (const auto c : l) {
                 sum += c == 'X';
             }
         }
