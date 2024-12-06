@@ -17,6 +17,8 @@ enum class Facing {
 };
 
 struct GridNavigator {
+    virtual ~GridNavigator() = default;
+
     std::pair<int, int> pos = {-1,-1};
     Facing f = Facing::N;
 
@@ -40,7 +42,14 @@ struct GridNavigator {
         return { x, y };
     }
 
-    void rotateRight() {
+    bool rotateRight() {
+        // add this rotation to memory.
+        auto [_, insertion] = memory.emplace(f, pos);
+        if (! insertion) { // we already did this rotation in this spot, this is a loop.
+            looped = true;
+            return false;
+        }
+
         switch (f) {
             case Facing::N:
                 f = Facing::E;
@@ -57,12 +66,13 @@ struct GridNavigator {
             default:
                 throw std::logic_error("Non-Exhaustive enum switch");
         }
+
+        return true; // overrides might return otherwise.
     }
-};
 
-struct LoopingGridNavigator : public GridNavigator {
-    LoopingGridNavigator() : GridNavigator() {}
-
+    [[nodiscard]] bool on_loop() const { return looped; }
+private:
+    bool looped = false;
     std::set<std::pair<Facing, std::pair<int, int>>> memory;
 };
 
@@ -88,13 +98,14 @@ public:
             return false;
         }
 
+        bool ok = true;
         if (this->operator[](y)[x] == '#') { // collision.
-            guard.rotateRight();
+            ok = guard.rotateRight();
         } else { // collision
             guard.pos = suggested;
         }
 
-        return true;
+        return ok;
     }
 
     void markGuard() {
@@ -102,6 +113,14 @@ public:
     }
 
     auto guardStartPos() { return this->guard_start_pos; }
+
+    void assignGuard(GridNavigator&& g) {
+        guard = g;
+    }
+
+    [[nodiscard]] bool on_loop() const {
+        return guard.on_loop();
+    }
 
 private:
     [[nodiscard]] bool inBounds (const std::pair<int,int>& p) const {
@@ -179,9 +198,41 @@ CLASS_DEF(DAY) {
             stepSuccess = copy.guardStep();
         } while (stepSuccess);
 
-        // use the 'X' marks to try placing a new obstacle, then step to try and find loops.
+        int sum = 0;
+        // use the 'X' marks to try placing a new obstacle, then step to try and find loops. Skip the guard starting position.
+        for (size_t i = 0; i < copy.size(); ++i) {
+            for (size_t j = 0; j < copy[i].size(); ++j) {
+                auto c = copy[i][j];
+                if (c != 'X') { // guard does not touch this spot, placing an obstacle here does nothing.
+                    continue;
+                }
+                if (std::make_pair(static_cast<int>(j), static_cast<int>(i)) == copy.guardStartPos()) { // can't place here.
+                    continue;
+                }
 
-        reportSolution(0);
+                // try marking this X spot and see if there is a loop.
+                copy[i][j] = '#';
+
+                // new guard in the start position to see if we loop.
+                GridNavigator newGuard;
+                newGuard.pos = copy.guardStartPos();
+                copy.assignGuard(std::move(newGuard));
+
+                bool newGuardStep;
+                do {
+                    newGuardStep = copy.guardStep();
+                } while (newGuardStep);
+
+                if (copy.on_loop()) {
+                    sum += 1;
+                }
+
+                // restore state.
+                copy[i][j] = 'X';
+            }
+        }
+
+        reportSolution(sum);
     }
 
     void parseBenchReset() override {
