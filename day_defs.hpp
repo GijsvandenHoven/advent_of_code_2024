@@ -23,8 +23,8 @@
 #include "day_06/day_6.hpp"
 // PLACEHOLD(7)
 #include "day_07/day_7.hpp"
-PLACEHOLD(8)
-// #include "day_08/day_8.hpp"
+// PLACEHOLD(8)
+#include "day_08/day_8.hpp"
 PLACEHOLD(9)
 // #include "day_09/day_9.hpp"
 PLACEHOLD(10)
