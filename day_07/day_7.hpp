@@ -47,14 +47,15 @@ CLASS_DEF(DAY) {
     }
 
     static int64_t concat(int64_t left, int64_t right) {
-        while (right != 0) {
-            const auto digit = right % 10;
-            right /= 10;
-            left *= 10;
-            left += digit;
+        int left_mul = 1;
+        auto r_copy = right;
+        while (r_copy != 0) {
+            left_mul *= 10;
+            r_copy /= 10;
         }
 
-        return left;
+        int64_t result = left * left_mul + right;
+        return result;
     }
 
     static bool reachable(int64_t goal, int64_t partial, int idx, const std::vector<int64_t>& values, bool problem_2_enabled) {
@@ -82,21 +83,23 @@ CLASS_DEF(DAY) {
     void v1() const override {
         int64_t can = 0;
         for (auto& p : problems) {
-            if(reachable(p.goal, 0, 0, p.values, false)) {
+            if(reachable(p.goal, p.values[0], 1, p.values, false)) {
                 can += p.goal;
             }
         }
         reportSolution(can);
     }
 
-    // 32277743467738   - too high.
     void v2() const override {
+        int64_t upper_bound = 0;
         int64_t can = 0;
         for (auto& p : problems) {
-            if(reachable(p.goal, 0, 0, p.values, true)) {
+            upper_bound += p.goal;
+            if(reachable(p.goal, p.values[0], 1, p.values, true)) {
                 can += p.goal;
             }
         }
+
         reportSolution(can);
     }
 
