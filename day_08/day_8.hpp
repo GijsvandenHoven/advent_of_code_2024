@@ -107,36 +107,23 @@ NAMESPACE_DEF(DAY) {
                         auto [b, a] = v[i];
                         auto [y, x] = v[j];
 
-                        // the antenna itself is an antinode in problem 2.
-                        //resonances.emplace(b, a);
-                        //resonances.emplace(y, x);
-
                         const int xdiff = std::abs(a - x);
                         const int ydiff = std::abs(b - y);
 
                         bool x1plus = true;
-
-                        int x1 = a + xdiff;
-                        int x2 = x - xdiff;
-                        if (x1 == x) {
-                            x1 = a - xdiff;
-                            x2 = x + xdiff;
+                        if (a + xdiff == x) {
                             x1plus = false;
                         }
 
                         bool y1plus = true;
-                        int y1 = b + ydiff;
-                        int y2 = y - ydiff;
-                        if (y1 == y) {
-                            y1 = b - ydiff;
-                            y2 = y + ydiff;
+                        if (b + ydiff == y) {
                             y1plus = false;
                         }
 
                         // x1/y1 emplacmeent loop
                         {
                             int mul = 0;
-                            auto coord = [a,x, &mul](int v, int diff, int plus) {
+                            auto coord = [&mul](int v, int diff, int plus) {
                                 int scaled = mul * diff;
                                 return plus ? v + scaled : v - scaled;
                             };
@@ -149,37 +136,21 @@ NAMESPACE_DEF(DAY) {
                                 ++mul;
                             }
                         }
-
-                        // if (y1 >= 0 && y1 < ymax) {
-                        //     if (x1 >= 0 && x1 < xmax) {
-                        //         resonances.emplace(y1, x1);
-                        //     }
-                        // }
-                        // if (y2 >= 0 && y2 < ymax) {
-                        //     if (x2 >= 0 && x2 < xmax) {
-                        //         resonances.emplace(y2, x2);
-                        //     }
-                        // }
-
-                        //std::cout << "pairs " << b << ", " << a << " and " << y << ", " << x << " have antinodes at " << y1 << ", " << x1 << " and " << y2 << ", " << x2 << "\n";
                     }
                 }
             }
 
-            for (size_t i = 0; i < grid.size(); ++i) {
-                for (size_t j = 0; j < grid[i].size(); ++j) {
-                    auto coord = std::make_pair(j,i);
-                    if (resonances.contains(coord)) {
-                        std::cout << "#";
-                    } else {
-                        std::cout << grid[i][j];
-                    }
-                }
-                std::cout << "\n";
-            }
-
-            // for (auto [y, x] : resonances) {
-            //     std::cout << "at " << y << ", " << x << "\n";
+            // visualise
+            // for (size_t i = 0; i < grid.size(); ++i) {
+            //     for (size_t j = 0; j < grid[i].size(); ++j) {
+            //         auto coord = std::make_pair(j,i);
+            //         if (resonances.contains(coord)) {
+            //             std::cout << "#";
+            //         } else {
+            //             std::cout << grid[i][j];
+            //         }
+            //     }
+            //     std::cout << "\n";
             // }
 
             reportSolution(resonances.size());
@@ -187,6 +158,7 @@ NAMESPACE_DEF(DAY) {
 
         void parseBenchReset() override {
             grid.clear();
+            antenna_pairs.clear();
         }
 
         private:
