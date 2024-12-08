@@ -33,6 +33,10 @@ NAMESPACE_DEF(DAY) {
         // because the thing says "for any pair there are two, on either side of them" ?
         void v1() const override {
             std::set<std::pair<int,int>> resonances;
+            // prune the ones that are  OOB.
+            size_t xmax = grid.size();
+            size_t ymax = grid[0].size();
+
             for (auto& [k, v] : antenna_pairs) {
                 for (size_t i = 0; i < v.size(); ++i) {
                     for (size_t j = i; j < v.size(); ++j) {
@@ -58,28 +62,23 @@ NAMESPACE_DEF(DAY) {
                             y2 = y + ydiff;
                         }
 
+                        if (y1 >= 0 && y1 < ymax) {
+                            if (x1 >= 0 && x1 < xmax) {
+                                resonances.emplace(y1, x1);
+                            }
+                        }
+                        if (y2 >= 0 && y2 < ymax) {
+                            if (x2 >= 0 && x2 < xmax) {
+                                resonances.emplace(y2, x2);
+                            }
+                        }
+
                         //std::cout << "pairs " << b << ", " << a << " and " << y << ", " << x << " have antinodes at " << y1 << ", " << x1 << " and " << y2 << ", " << x2 << "\n";
-                        resonances.emplace(y1, x1);
-                        resonances.emplace(y2, x2);
                     }
                 }
             }
 
-            // prune the ones that are  OOB.
-            size_t xmax = grid.size();
-            size_t ymax = grid[0].size();
-
-            auto in_bounds_resonances = resonances;
-            in_bounds_resonances.clear();
-            for (auto& [y, x] : resonances) {
-                if (y >= 0 && y < ymax) {
-                    if (x >= 0 && x < xmax) {
-                        in_bounds_resonances.emplace(y, x);
-                    }
-                }
-            }
-
-            reportSolution(in_bounds_resonances.size());
+            reportSolution(resonances.size());
         }
 
         void v2() const override {
