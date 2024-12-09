@@ -27,18 +27,14 @@ NAMESPACE_DEF(DAY) {
             }
         }
 
-        void v1() const override {
-            // just use a vec i think the memory footprint is ok
-            std::vector<int> result;
-            result.reserve(data.size() * 10); // upper bound
-
+        void make_file(std::vector<int>& out) const {
             bool file = true;
             int file_id = 0;
             for (auto v : data) {
                 int enter = file ? file_id : -1;
 
                 for (int i = 0; i < v; ++i) {
-                    result.emplace_back(enter);
+                    out.emplace_back(enter);
                 }
 
                 if (file) {
@@ -46,6 +42,25 @@ NAMESPACE_DEF(DAY) {
                 }
                 file = ! file;
             }
+        }
+
+        static size_t checksum(const std::vector<int>& v) {
+            size_t checksum = 0;
+            for (int i = 0; i < v.size(); ++i) {
+                if (v[i] == -1) continue;
+
+                checksum += i * v[i];
+            }
+
+            return checksum;
+        }
+
+        void v1() const override {
+            // just use a vec i think the memory footprint is ok
+            std::vector<int> result;
+            result.reserve(data.size() * 10); // upper bound
+
+            make_file(result);
 
             int first_empty = 0;
             auto next_empty = [&]() {
@@ -67,93 +82,79 @@ NAMESPACE_DEF(DAY) {
                 next_empty();
             }
 
-            for (auto v : result) {
-                std::cout << v << ";";
-            }
-            std::cout << "\n";
-
-            size_t checksum = 0;
-            for (int i = 0; i < result.size(); ++i) {
-                if (result[i] == -1) break;
-
-                checksum += i * result[i];
-            }
-
-            // int left = 0;
-            // int right = static_cast<int>(data.size() - 1);
-            //
-            // auto consume_left = [&](int index) {
-            //     int v = data[index];
-            //     for (int i = 0; i < v; ++i) {
-            //         result.emplace_back(v);
-            //     }
-            // };
-            //
-            // consume_left(left);
-            // ++left;
-            //
-            // while (left < right) {
-            //     // consume a block on the rhs.
-            //
-            //     // 3 things possible: run out perfectly.
-            //     // run out with space (left) remaining.
-            //     // run out of left space with right remaining.
+            // for (auto v : result) {
+            //     std::cout << v << ";";
             // }
+            // std::cout << "\n";
 
-
-            // int left = 0;
-            // int right = static_cast<int>(data.size() - 1);
-            // int out_idx = 0;
-            //
-            // // int highest_file_id = (static_cast<int>(data.size()) / 2);
-            // auto file_id = [](int x){ return x / 2; };
-            //
-            // size_t checksum = 0;
-            //
-            // auto consume_left_block = [&](int index) {
-            //     int left_block_size = data[index];
-            //     for (int i = 0; i < left_block_size; ++i) {
-            //         checksum += file_id(index) * out_idx;
-            //         ++out_idx;
-            //     }
-            // };
-            //
-            // // eat the first block.
-            // consume_left_block(left);
-            // ++left;
-            //
-            //
-            // while (left < right) {
-            //     // consume on the right
-            //
-            //     // if (left == right) { // todo
-            //     //     break;
-            //     // }
-            //     //
-            //     // // move file on right
-            //     // int empty_space_left = data[left];
-            //     // int file_on_right = data[right];
-            //     // for (int i = 0; i < empty_space_left; ++i) {
-            //     //     checksum += file_id(right) * out_idx;
-            //     //     ++out_idx;
-            //     //     --file_on_right;
-            //     //
-            //     //     if (file_on_right == 0) {
-            //     //         right -= 2;
-            //     //         break;
-            //     //     }
-            //     // }
-            //     //
-            //     // if (empty_space_left > 0) {
-            //     //
-            //     // }
-            // }
-
-            reportSolution(checksum);
+            reportSolution(checksum(result));
         }
 
         void v2() const override {
-            reportSolution(0);
+            std::vector<int> result;
+            result.reserve(data.size() * 10); // upper bound
+
+            make_file(result);
+
+            // for each file try to move it left
+            int first_empty = 0;
+            auto next_empty = [&]() {
+                while (result[first_empty] != -1) { // dangerous if there is no empty :)
+                    ++first_empty;
+                }
+            };
+
+            next_empty(); // set up this index.
+
+            for (int i = static_cast<int>(result.size() - 1); i >= 0; --i) {
+                if (first_empty > i) break;
+
+                if (result[i] == -1) continue;
+
+                // get the size of this file
+                int file_size = 0;
+                int file_desc = result[i];
+                int file_end_i = i;
+                while (result[i] == file_desc) { // again quite unsafe with a full disk :)
+                    // puzzle doesnt do this so i dont either.
+                    // result[i] = -1; // just temporarily delete the file what could go wrong. Necessary to do accurate empty space checks.
+                    ++ file_size;
+                    -- i;
+                }
+                ++ i; // we want it to point to the start of the file we just ate.
+
+                // seek left to right for the first empty block that would fit this.
+                int block_size = 0;
+                int move_to_i = -100;
+                for (int j = first_empty; j <= file_end_i; ++j) {
+                    if (result[j] == -1) {
+                        ++block_size;
+                        if (block_size == file_size) { // ok put the file here. Guaranteed to find something due to -1 setting earlier.
+                            move_to_i = j;
+                            break;
+                        }
+                    } else {
+                        block_size = 0;
+                    }
+                }
+
+                // std::cout << "found block of size >" << block_size << " at " << move_to_i << "(back)\n";
+
+                if (move_to_i == -100) {
+                    continue;
+                    // throw std::logic_error("No movable block");
+                }
+
+                for (int k = 0; k < file_size; ++k) {
+                    result[move_to_i - k] = file_desc;
+                    result[i + k] = -1; // i points to start of file.
+                }
+
+                next_empty(); // may choose itself if no movement was done.
+            }
+
+
+            reportSolution(checksum(result));
         }
 
         void parseBenchReset() override {
