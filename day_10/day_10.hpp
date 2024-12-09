@@ -1,8 +1,37 @@
-//
-// Created by gijs on 12/9/24.
-//
+#pragma once
 
-#ifndef DAY_10_HPP
-#define DAY_10_HPP
+#include <iostream>
 
-#endif //DAY_10_HPP
+#include "../util/Day.hpp"
+#include "../util/macros.hpp"
+
+#define DAY 10
+
+NAMESPACE_DEF(DAY) {
+
+    CLASS_DEF(DAY) {
+        public:
+        DEFAULT_CTOR_DEF(DAY)
+
+        void parse(std::ifstream &input) override {
+
+        }
+
+        void v1() const override {
+            reportSolution(0);
+        }
+
+        void v2() const override {
+            reportSolution(0);
+        }
+
+        void parseBenchReset() override {
+
+        }
+
+        private:
+    };
+
+} // namespace
+
+#undef DAY
