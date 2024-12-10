@@ -66,6 +66,7 @@ CLASS_DEF(DAY) {
         }
     }
 
+    // this is a silly solution, i could have just done the normal BFS and count it anyway when a node == 9. There is no need to first get the 9s then go again per 9.
     int BFSRating(int from, int to) const {
          // how many ways to get from the start to the end?
         std::queue<int> work;
