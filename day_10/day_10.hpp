@@ -64,19 +64,35 @@ CLASS_DEF(DAY) {
                 }
             }
         }
-
-        // for (auto& [k,v] : graph) {
-        //     std::cout << "node " << k << ":\n\t";
-        //     std::cout << "val: " << v.value << "\n\t";
-        //     std::cout << "in: ";
-        //     for (auto i : v.in) { std::cout << i << ", "; }
-        //     std::cout << "\n\tout: \n\t";
-        //     for (auto i : v.out) { std::cout << i << ", "; }
-        //     std::cout << "\n";
-        // }
     }
 
-    int BFSReachableNine(int from) const {
+    int BFSRating(int from, int to) const {
+         // how many ways to get from the start to the end?
+        std::queue<int> work;
+        work.push(from);
+        int rating = 0;
+
+        while (! work.empty()) {
+            int unit = work.front();
+            work.pop();
+
+            auto it = graph.find(unit);
+            if (it == graph.end()) throw std::logic_error("unknown node");
+
+            if (it->first == to) {
+                ++rating;
+            }
+
+            for (int id : it->second.out) {
+                work.push(id);
+            }
+        }
+
+        std::cout << " rated: " << rating << "\n";
+        return rating;
+    }
+
+    int BFSReachableNine(int from, std::vector<int>& nines_reachable) const {
         std::set<int> reached;
         std::queue<int> work;
         work.push(from);
@@ -91,6 +107,7 @@ CLASS_DEF(DAY) {
 
             if (it->second.value == 9) {
                 ++nines;
+                nines_reachable.emplace_back(it->first);
             }
 
             for (int id : it->second.out) {
@@ -107,16 +124,31 @@ CLASS_DEF(DAY) {
     void v1() const override {
         // DFS find the # of reachable 9s from the 0s.
         int reachableSum = 0;
+        std::vector<int> dont_care; // used for p2
         for (auto& [k, v] : graph) {
             if (v.value != 0) continue;
 
-            reachableSum += BFSReachableNine(v.id);
+            reachableSum += BFSReachableNine(v.id, dont_care);
+            dont_care.clear();
         }
         reportSolution(reachableSum);
     }
 
     void v2() const override {
-        reportSolution(0);
+        // DFS find the # of reachable 9s from the 0s.
+        int ratingSum = 0;
+        for (auto& [k, v] : graph) {
+            if (v.value != 0) continue;
+
+            std::vector<int> nines; // used forr p2
+            BFSReachableNine(v.id, nines);
+
+            // pathfinding DFS on a 0-9 pair to get its rating
+            for (auto nine : nines) {
+                ratingSum += BFSRating(v.id, nine);
+            }
+        }
+        reportSolution(ratingSum);
     }
 
     void parseBenchReset() override {
