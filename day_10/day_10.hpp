@@ -1,6 +1,7 @@
 #pragma once
 
 #include <iostream>
+#include <queue>
 
 #include "../util/Day.hpp"
 #include "../util/macros.hpp"
@@ -75,8 +76,43 @@ CLASS_DEF(DAY) {
         // }
     }
 
+    int BFSReachableNine(int from) const {
+        std::set<int> reached;
+        std::queue<int> work;
+        work.push(from);
+        int nines = 0;
+
+        while (! work.empty()) {
+            int unit = work.front();
+            work.pop();
+
+            auto it = graph.find(unit);
+            if (it == graph.end()) throw std::logic_error("unknown node");
+
+            if (it->second.value == 9) {
+                ++nines;
+            }
+
+            for (int id : it->second.out) {
+                if (! reached.contains(id)) {
+                    reached.emplace(id);
+                    work.push(id);
+                }
+            }
+        }
+
+        return nines;
+    }
+
     void v1() const override {
-        reportSolution(0);
+        // DFS find the # of reachable 9s from the 0s.
+        int reachableSum = 0;
+        for (auto& [k, v] : graph) {
+            if (v.value != 0) continue;
+
+            reachableSum += BFSReachableNine(v.id);
+        }
+        reportSolution(reachableSum);
     }
 
     void v2() const override {
