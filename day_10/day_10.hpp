@@ -89,7 +89,7 @@ CLASS_DEF(DAY) {
             }
         }
 
-        std::cout << " rated: " << rating << "\n";
+        // std::cout << " rated: " << rating << "\n";
         return rating;
     }
 
