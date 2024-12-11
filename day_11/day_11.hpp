@@ -24,7 +24,53 @@ NAMESPACE_DEF(DAY) {
             }
         }
 
+        int64_t countSplits(int64_t stone, int g_blinks, std::vector<std::map<int64_t, int64_t>>& cache) const {
+
+            if (cache[g_blinks].contains(stone)) {
+                std::cout << " cache hit, saving " << g_blinks << "\n";
+                return cache[g_blinks].find(stone)->second;
+            }
+
+            // base case
+            if (g_blinks == 0) {
+                cache[0].emplace(stone, 1);
+                return 1; // this stone is part of the final count.
+            }
+
+            // step 1
+            if (stone == 0) {
+                int64_t result = countSplits(1, g_blinks - 1, cache);
+                cache[g_blinks].emplace(stone, result);
+
+                return result;
+            }
+
+            // step 2
+            auto sstr = std::to_string(stone);
+            if (sstr.size() % 2 == 0) { // yuck
+                auto left = std::stoi(sstr.substr(0, sstr.size() / 2));
+                auto right = std::stoi(sstr.substr(sstr.size() / 2));
+                int64_t result = countSplits(left, g_blinks - 1, cache) + countSplits(right, g_blinks - 1, cache);
+                cache[g_blinks].emplace(stone, result);
+
+                return result;
+            }
+
+            // step 3
+            {
+                int64_t result = countSplits(stone * 2024, g_blinks - 1, cache);
+                cache[g_blinks].emplace(stone, result);
+
+                return result;
+            }
+        }
+
         void stoneBlink(int nstep, int64_t stone, std::vector<int64_t>& output, int goal) const {
+
+            if (stone < 0) {
+                throw std::logic_error("overflow");
+            }
+
             if (nstep == goal) {
                 output.emplace_back(stone);
                 return;
@@ -37,7 +83,6 @@ NAMESPACE_DEF(DAY) {
             }
             // rule 2
             auto sstr = std::to_string(stone);
-            std::cout << "stoi: " << sstr << "\n";
             if (sstr.size() % 2 == 0) { // yuck
                 stoneBlink(nstep+1, std::stoi(sstr.substr(0, sstr.size() / 2)), output, goal);
                 stoneBlink(nstep+1, std::stoi(sstr.substr(sstr.size() / 2)), output, goal);
@@ -49,7 +94,7 @@ NAMESPACE_DEF(DAY) {
 
         void v1() const override {
             std::vector<int64_t> result;
-            const int goal = 25;
+            const int goal = 25; // call this with 25 and your comupter dies.
             for (auto s : stones) {
                 stoneBlink(0, s, result, goal);
             }
@@ -58,7 +103,16 @@ NAMESPACE_DEF(DAY) {
         }
 
         void v2() const override {
+            // don't do that, kills your computer.
 
+            int goal = 75;
+            std::vector<std::map<int64_t, int64_t>> cache(goal + 1);
+            int64_t total = 0;
+            for (auto s : stones) {
+                total += countSplits(s, goal, cache);
+            }
+
+            reportSolution(total);
         }
 
         void parseBenchReset() override {
