@@ -14,7 +14,18 @@ NAMESPACE_DEF(DAY) {
         DEFAULT_CTOR_DEF(DAY)
 
         void parse(std::ifstream &input) override {
+            std::string line;
+            std::getline(input, line);
+            std::stringstream ss(line);
+            int v;
+            while (!ss.eof()) {
+                ss >> v;
+                stones.emplace_back(v);
+            }
 
+            for (auto& x : stones) {
+                std::cout << x << "\n";
+            }
         }
 
         void v1() const override {
@@ -26,10 +37,11 @@ NAMESPACE_DEF(DAY) {
         }
 
         void parseBenchReset() override {
-
+            stones.clear();
         }
 
         private:
+        std::vector<int> stones;
     };
 
 } // namespace
