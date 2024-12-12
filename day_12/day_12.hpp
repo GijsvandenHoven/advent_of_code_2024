@@ -20,7 +20,7 @@ struct Blob {
 
         int sides = 0;
 
-        std::cout << " blob " << type << ":\n";
+        // std::cout << " blob " << type << ":\n";
 
 
         for (auto [y,x] : pointcloud) {
@@ -77,10 +77,10 @@ struct Blob {
                 ++sides;
             }
 
-            std::cout << "\tnow at " << sides << " sides\n";
+            // std::cout << "\tnow at " << sides << " sides\n";
         }
 
-        std::cout << "blob " << type << " has " << sides << " sides\n";
+        // std::cout << "blob " << type << " has " << sides << " sides\n";
 
         return sides;
     }
@@ -112,12 +112,12 @@ CLASS_DEF(DAY) {
 
         if (grid[i][j] != out.type) { // non-matching neighbour!
             out.perimeter += 1;
-            std::cout << "\tAdds to perimeter: " << i << ", " << j << "\n";
+            // std::cout << "\tAdds to perimeter: " << i << ", " << j << "\n";
         } else { // matching neighbour!
             if (processed.contains({i, j})) { // we have already considered this tile.
                 return;
             }
-            std::cout << "\tAdds to area: " << i << ", " << j << "\n";
+            // std::cout << "\tAdds to area: " << i << ", " << j << "\n";
             out.area += 1;
             processed.emplace(i, j);
             out.pointcloud.emplace(i, j); // for problem 2!
@@ -138,7 +138,7 @@ CLASS_DEF(DAY) {
         for (int i = 0; i < grid.size(); ++i) {
             for (int j = 0; j < grid[i].size(); ++j) {
                 if (! processed.contains({i, j})) { // new thing, let's work out this one.
-                    std::cout << " do blob " << grid[i][j] << "\n";
+                    // std::cout << " do blob " << grid[i][j] << "\n";
                     blobs.emplace_back();
                     blobs.back().type = grid[i][j];
                     make_blob(i, j, processed, blobs.back());
@@ -149,7 +149,7 @@ CLASS_DEF(DAY) {
         size_t price = 0;
         for (auto& b : blobs) {
             price += b.area * b.perimeter;
-            std::cout << b << "\n";
+            // std::cout << b << "\n";
         }
 
         reportSolution(price);
@@ -161,7 +161,7 @@ CLASS_DEF(DAY) {
         for (int i = 0; i < grid.size(); ++i) {
             for (int j = 0; j < grid[i].size(); ++j) {
                 if (! processed.contains({i, j})) { // new thing, let's work out this one.
-                    std::cout << " do blob " << grid[i][j] << "\n";
+                    // std::cout << " do blob " << grid[i][j] << "\n";
                     blobs.emplace_back();
                     blobs.back().type = grid[i][j];
                     make_blob(i, j, processed, blobs.back());
@@ -172,7 +172,7 @@ CLASS_DEF(DAY) {
         size_t price = 0;
         for (auto& b : blobs) {
             price += b.area * b.get_sides();
-            std::cout << b << "\n";
+            // std::cout << b << "\n";
         }
 
         reportSolution(price);
