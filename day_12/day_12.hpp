@@ -24,22 +24,22 @@ struct Blob {
 
 
         for (auto [y,x] : pointcloud) {
-            std::cout << "\tconsider " << y << ", " << x << "\n";
+            // std::cout << "\tconsider " << y << ", " << x << "\n";
             // 90 degree outer angles
             if ((! pointcloud.contains({y, x-1})) && (! pointcloud.contains({ y-1, x }))) { // 90 degree angle outer top left
-                std::cout << "\t\tOTL\n";
+                // std::cout << "\t\tOTL\n";
                 sides++;
             }
             if ((! pointcloud.contains({y, x+1})) && (! pointcloud.contains({ y-1, x}))) { // 90 degree angle outer top right
-                std::cout << "\t\tOTR\n";
+                // std::cout << "\t\tOTR\n";
                 sides++;
             }
             if ((! pointcloud.contains({y, x-1})) && (! pointcloud.contains({ y+1, x }))) { // 90 degree angle bot top left
-                std::cout << "\t\tOBL\n";
+                // std::cout << "\t\tOBL\n";
                 sides++;
             }
             if ((! pointcloud.contains({y, x+1})) && (! pointcloud.contains({ y+1, x }))) { // 90 degree angle bot top right
-                std::cout << "\t\tOBR\n";
+                // std::cout << "\t\tOBR\n";
                 sides++;
             }
 
@@ -47,33 +47,33 @@ struct Blob {
             if (
                 pointcloud.contains({y, x-1}) &&
                 pointcloud.contains({ y-1, x }) &&
-                    (! pointcloud.contains({x-1, y-1}))
+                    (! pointcloud.contains({y-1, x-1}))
                 ) { // inner corner top left
-                std::cout << "\t\tITL\n";
+                // std::cout << "\t\tITL\n";
                 ++sides;
             }
             if (
                 pointcloud.contains({y, x+1}) &&
                 pointcloud.contains({ y-1, x }) &&
-                    (! pointcloud.contains({x+1, y-1}))
+                    (! pointcloud.contains({y-1, x+1}))
                 ) { // inner corner top right
-                std::cout << "\t\tITR\n";
+                // std::cout << "\t\tITR\n";
                 ++sides;
             }
             if (
                 pointcloud.contains({y, x-1}) &&
                 pointcloud.contains({ y+1, x }) &&
-                    (! pointcloud.contains({x-1, y+1}))
+                    (! pointcloud.contains({y+1, x-1}))
                 ) { // inner corner bot left
-                std::cout << "\t\tIBL\n";
+                // std::cout << "\t\tIBL\n";
                 ++sides;
             }
             if (
                 pointcloud.contains({y, x+1}) &&
                 pointcloud.contains({ y+1, x }) &&
-                    (! pointcloud.contains({x+1, y+1}))
+                    (! pointcloud.contains({y+1, x+1}))
                 ) { // inner corner bot right
-                std::cout << "\t\tIBR\n";
+                // std::cout << "\t\tIBR\n";
                 ++sides;
             }
 
