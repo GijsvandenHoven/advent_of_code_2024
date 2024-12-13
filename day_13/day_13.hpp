@@ -68,12 +68,37 @@ CLASS_DEF(DAY) {
             input.clear();
             input.get(); // newline char
 
-            std::cout << g << "\n";
+            games.push_back(g);
+            // std::cout << g << "\n";
         }
     }
 
+    int bruteforceWin(const Game& g) const {
+        for (int a = 0; a <= 100; ++a) {
+            int ngx = g.Goal.x - (a * g.A.x);
+            int ngy = g.Goal.y - (a * g.A.y);
+
+            for (int b = 0; b <= 100; ++b) {
+                int egx = ngx - (b * g.B.x);
+                int egy = ngy - (b * g.B.y);
+
+                if (egx == 0 && egy == 0) {
+                    return a * 3 + b;
+                }
+            }
+        }
+
+        return 0;
+    }
+
     void v1() const override {
-        reportSolution(0);
+        int cost = 0;
+        for (auto& g : games) {
+            int c = bruteforceWin(g);
+            std::cout << g << "\n cost: " << c << "\n";
+            cost += c;
+        }
+        reportSolution(cost);
     }
 
     void v2() const override {
@@ -85,6 +110,7 @@ CLASS_DEF(DAY) {
     }
 
     private:
+    std::vector<Game> games;
 };
 
 } // namespace
