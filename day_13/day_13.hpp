@@ -73,7 +73,7 @@ CLASS_DEF(DAY) {
         }
     }
 
-    int64_t z3(const Game& g) const {
+    static int64_t z3(const Game& g) {
         int64_t gx = static_cast<int64_t>(g.Goal.x) + 10'000'000'000'000;
         int64_t gy = static_cast<int64_t>(g.Goal.y) + 10'000'000'000'000;
 
@@ -129,7 +129,7 @@ CLASS_DEF(DAY) {
         return 0;
     }
 
-    int bruteforceWin(const Game& g) const {
+    static int bruteforceWin(const Game& g) {
         for (int a = 0; a <= 100; ++a) {
             int ngx = g.Goal.x - (a * g.A.x);
             int ngy = g.Goal.y - (a * g.A.y);
@@ -167,7 +167,7 @@ CLASS_DEF(DAY) {
     }
 
     void parseBenchReset() override {
-
+        games.clear();
     }
 
     private:

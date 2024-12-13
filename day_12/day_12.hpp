@@ -179,11 +179,11 @@ CLASS_DEF(DAY) {
     }
 
     void parseBenchReset() override {
-
+        grid.clear();
     }
 
     private:
-        std::vector<std::vector<char>> grid;
+    std::vector<std::vector<char>> grid;
 };
 
 } // namespace
