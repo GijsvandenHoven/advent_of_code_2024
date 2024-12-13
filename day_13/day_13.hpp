@@ -73,6 +73,62 @@ CLASS_DEF(DAY) {
         }
     }
 
+    int64_t z3(const Game& g) const {
+        int64_t gx = static_cast<int64_t>(g.Goal.x) + 10'000'000'000'000;
+        int64_t gy = static_cast<int64_t>(g.Goal.y) + 10'000'000'000'000;
+
+        std::ofstream smt("d13_z3.txt");
+
+        smt << "(declare-const A Int)\n";
+        smt << "(declare-const B Int)\n\n";
+        smt << "(assert (and\n(>= A 0) (>= B 0)\n";
+
+        // x
+        smt << "(= " << gx << " (+ ( * A " << g.A.x << ") (* B " << g.B.x << ")))\n";
+        // y
+        smt << "(= " << gy << " (+ ( * A " << g.A.y << ") (* B " << g.B.y << ")))\n";
+
+        smt << "\n))\n\n";
+
+        smt << "(minimize (+ (* 3 A) (* 1 B)))\n\n";
+        smt << "(check-sat)\n";
+        smt << "(get-objectives)\n";
+        smt << "(get-model)";
+
+
+        smt.close();
+
+        std::array<char, 128> buffer {};
+        std::string result;
+        std::unique_ptr<FILE, decltype(&pclose)> pipe(popen("z3 -smt2 d13_z3.txt", "r"), pclose);
+        if (!pipe) {
+            throw std::runtime_error("popen() failed!");
+        }
+        while (fgets(buffer.data(), static_cast<int>(buffer.size()), pipe.get()) != nullptr) {
+            result += buffer.data();
+        }
+
+        if (result.starts_with("sat")) {
+            std::stringstream scan(result);
+            std::string line;
+            std::getline(scan, line); // 'sat'
+            std::getline(scan, line); // '(objectives'
+            std::getline(scan, line); // '(answer)'
+
+
+            // std::cout << line << "\n\t";
+
+            std::stringstream lscan(line);
+            for (int i = 0; i < 21; ++i) { lscan.get(); }
+            int64_t answer;
+            lscan >> answer;
+
+            return answer;
+        }
+
+        return 0;
+    }
+
     int bruteforceWin(const Game& g) const {
         for (int a = 0; a <= 100; ++a) {
             int ngx = g.Goal.x - (a * g.A.x);
@@ -95,14 +151,19 @@ CLASS_DEF(DAY) {
         int cost = 0;
         for (auto& g : games) {
             int c = bruteforceWin(g);
-            std::cout << g << "\n cost: " << c << "\n";
+            // std::cout << g << "\n cost: " << c << "\n";
             cost += c;
         }
         reportSolution(cost);
     }
 
     void v2() const override {
-        reportSolution(0);
+        int64_t cost = 0;
+        for (auto& g : games) {
+            int64_t c = z3(g);
+            cost += c;
+        }
+        reportSolution(cost);
     }
 
     void parseBenchReset() override {
