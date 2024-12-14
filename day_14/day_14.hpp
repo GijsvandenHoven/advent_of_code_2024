@@ -109,13 +109,13 @@ CLASS_DEF(DAY) {
     bool tree(const std::set<std::pair<int,int>>& pos) const {
 
         if (pos.contains({gridX / 2, 0})) {
-            for (int y = 0; y < gridY; ++y) {
-                for (int x = 0; x < gridX; ++x) {
-                    std::cout << (pos.contains({x,y}) ? '#' : '.');
-                }
-                std::cout << "\n";
-            }
-            std::cout << "\n\n";
+            // for (int y = 0; y < gridY; ++y) {
+            //     for (int x = 0; x < gridX; ++x) {
+            //         std::cout << (pos.contains({x,y}) ? '#' : '.');
+            //     }
+            //     std::cout << "\n";
+            // }
+            // std::cout << "\n\n";
         }
 
         return false;
@@ -136,6 +136,24 @@ CLASS_DEF(DAY) {
         }
     }
 
+    void print_bots(const std::set<std::pair<int, int>> & set, std::ofstream & output, int sec) const {
+        static auto print = [&]() {
+            for (int y = 0; y < gridY; ++y) {
+                for (int x = 0; x < gridX; ++x) {
+                    output << (set.contains({x,y}) ? '#' : '.');
+                }
+                output << "\n";
+            }
+            output << "\n\n";
+        };
+
+        // hardcoded checks to inspect the txt file for patterns manually.
+        if ((sec - 48) % 101 == 0) {
+            output << sec << "\n";
+            print();
+        }
+    };
+
     void v2() const override {
         std::set<std::pair<int,int>> botpos;
         std::vector<Bot> mut_bots = bots;
@@ -143,16 +161,34 @@ CLASS_DEF(DAY) {
         for (auto& b : bots) {
             botpos.emplace(b.startX, b.startY);
         }
+        // int total = 0;
+        // for (int i = 1; i <= 51; i += 2) {
+        //     total += i;
+        // }
+        // std::cout << total << "\n";
 
+        std::ofstream output ("day14.txt");
         int sec = 0;
         while (! tree(botpos)) {
+
+            print_bots(botpos, output, sec);
             step(botpos, mut_bots);
             ++sec;
 
+            if (sec > 100000) break;
             // std::cout << sec << "\n";
         }
 
-        reportSolution(0);
+
+        // concluded with the E.Y.E.B.A.L.L. Algorithm.
+        // Every
+        // Year
+        // Eyes
+        // Beat
+        // Algorithms,
+        // Least
+        // LOnce
+        reportSolution(7623);
     }
 
     void parseBenchReset() override {
