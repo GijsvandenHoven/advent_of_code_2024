@@ -8,52 +8,52 @@
 
 #define DAY 4
 
-struct Grid : public std::vector<std::vector<char>> {
-    const std::vector<char>& add_line(const std::string& l) {
-        this->emplace_back(l.begin(), l.end());
-        return this->back();
-    }
+NAMESPACE_DEF(DAY) {
 
-    [[nodiscard]] std::pair<bool, char> get(int i, int j) const {
-        if (i < 0 || i >= this->size()) {
-            return std::make_pair(false, 0);
+    struct Grid : public std::vector<std::vector<char>> {
+        const std::vector<char>& add_line(const std::string& l) {
+            this->emplace_back(l.begin(), l.end());
+            return this->back();
         }
 
-        const auto& v = this->operator[](i);
-        if (j < 0 || j >= v.size()) {
-            return std::make_pair(false, 0);
+        [[nodiscard]] std::pair<bool, char> get(int i, int j) const {
+            if (i < 0 || i >= this->size()) {
+                return std::make_pair(false, 0);
+            }
+
+            const auto& v = this->operator[](i);
+            if (j < 0 || j >= v.size()) {
+                return std::make_pair(false, 0);
+            }
+
+            return std::make_pair(true, v[j]);
         }
 
-        return std::make_pair(true, v[j]);
-    }
-
-    void findAllChar(char c, std::vector<std::pair<int,int>>& results) const {
-        for (int i = 0; i < this->size(); ++i) {
-            auto& v = this->operator[](i);
-            for (int j = 0; j < v.size(); ++j) {
-                if (v[j] == c) {
-                    results.emplace_back(i, j);
+        void findAllChar(char c, std::vector<std::pair<int,int>>& results) const {
+            for (int i = 0; i < this->size(); ++i) {
+                auto& v = this->operator[](i);
+                for (int j = 0; j < v.size(); ++j) {
+                    if (v[j] == c) {
+                        results.emplace_back(i, j);
+                    }
                 }
             }
         }
-    }
-};
+    };
 
-inline std::ostream& operator<<(std::ostream& os, const Grid& g) {
-    os << "Grid {\n";
-    for (auto& l : g) {
-        std::cout << "\t";
-        for (auto& c : l) {
-            std::cout << c;
+    inline std::ostream& operator<<(std::ostream& os, const Grid& g) {
+        os << "Grid {\n";
+        for (auto& l : g) {
+            std::cout << "\t";
+            for (auto& c : l) {
+                std::cout << c;
+            }
+            std::cout << "\n";
         }
-        std::cout << "\n";
+        std::cout << "}";
+
+        return os;
     }
-    std::cout << "}";
-
-    return os;
-}
-
-NAMESPACE_DEF(DAY) {
 
     CLASS_DEF(DAY) {
         public:
