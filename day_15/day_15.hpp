@@ -184,7 +184,6 @@ CLASS_DEF(DAY) {
             }
             case Dir::DOWN: case Dir::UP: {
 
-
                 // ok let's check, CAN we move this? This is only if this and the twin's box above (may not be the same) can move!
                 // Do not move immediately, let the entire recursion tree collapse first. In case a part of the tree can move but not another part!!
                 bool can_move = can_move_big_box_vertical(d, boxpos, g);
@@ -284,23 +283,17 @@ CLASS_DEF(DAY) {
     static void move_bot(Dir d, Grid& g, std::pair<int,int>& botpos) {
         auto intended_next = map_pos(d, botpos);
 
-        // std::cout << "mov " << intended_next.first << ", " << intended_next.second << "\n";
-
         auto go_to = g[intended_next.second][intended_next.first].occupant;
         switch (go_to) {
             case Occupant::EMPTY: // first update pos
-                // std::cout << "empty\n";
                 botpos = intended_next;
             case Occupant::WALL: // then we are done.
-                // std::cout << "wall\n";
                 return;
             case Occupant::BOT:
                 throw std::logic_error("Bot should have been removed from the grid representation");
             case Occupant::BOX: {
-                // std::cout << "box!\n";
                 bool result = try_move_box(d, g, intended_next);
                 if (result) { // grid was mutated by boxes from try_move_box
-                    // std::cout << "can push\n";
                     botpos = intended_next;
                 }
                 return;
@@ -332,15 +325,7 @@ CLASS_DEF(DAY) {
     void v1() const override {
         auto mut_copy = grid;
         auto botpos = start_bot;
-        // std::cout << botpos.first << ", " << botpos.second << "\n";
         for (auto d : movements) {
-            // std::cout << "PRE STEP " << d << ": " << botpos.first << ", " << botpos.second << "\n";
-            // for (auto& l : mut_copy) {
-            //     for (auto [occupant] : l) {
-            //         std::cout << static_cast<char>(occupant);
-            //     }
-            //     std::cout << "\n";
-            // }
 
             move_bot(d, mut_copy, botpos);
         }
@@ -354,36 +339,15 @@ CLASS_DEF(DAY) {
 
         auto botpos = start_bot_wide;
         for (auto d : movements) {
-            // std::cout << "PRE STEP " << d << ": " << botpos.first << ", " << botpos.second << "\n";
-            // for (auto& l : mut_copy) {
-            //     for (auto [occupant] : l) {
-            //         std::cout << static_cast<char>(occupant);
-            //     }
-            //     std::cout << "\n";
-            // }
             move_bot(d, mut_copy, botpos);
         }
-
-        // std::cout << "FINAL\n";
-        // for (auto& l : mut_copy) {
-        //     for (auto [occupant] : l) {
-        //         std::cout << static_cast<char>(occupant);
-        //     }
-        //     std::cout << "\n";
-        // }
 
         reportSolution(gps_sum(mut_copy));
     }
 
-    // for (auto& l : wide_grid) {
-    //     for (auto [occupant] : l) {
-    //         std::cout << static_cast<char>(occupant);
-    //     }
-    //     std::cout << "\n";
-    // }
-
     void parseBenchReset() override {
         movements.clear();
+        wide_grid.clear();
         grid.clear();
     }
 
