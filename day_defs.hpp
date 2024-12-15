@@ -39,8 +39,8 @@
 #include "day_14/day_14.hpp"
 // PLACEHOLD(15)
 #include "day_15/day_15.hpp"
-PLACEHOLD(16)
-// #include "day_16/day_16.hpp"
+// PLACEHOLD(16)
+#include "day_16/day_16.hpp"
 PLACEHOLD(17)
 // #include "day_17/day_17.hpp"
 PLACEHOLD(18)
