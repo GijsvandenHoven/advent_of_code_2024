@@ -49,7 +49,9 @@ enum class Occupant : char {
     WALL = '#',
     EMPTY = '.',
     BOT = '@',
-    BOX = 'O'
+    BOX = 'O',
+    BOX_LEFT = '[',
+    BOX_RIGHT = ']'
 };
 
 struct Tile {
@@ -68,12 +70,32 @@ CLASS_DEF(DAY) {
             if (line.empty()) break; // the empty line between the maze and the sequence.
 
             grid.emplace_back();
+            wide_grid.emplace_back();
             for (auto c : line) {
                 grid.back().emplace_back(static_cast<Occupant>(c));
 
                 if (grid.back().back().occupant == Occupant::BOT) {
                     start_bot = {grid.back().size() -1, grid.size() - 1}; // X, Y coords.
                     grid.back().back().occupant = Occupant::EMPTY; // get rid of this mf.
+                }
+
+                // also do the wide grid
+                switch (const auto conv = static_cast<Occupant>(c)) {
+                    case Occupant::WALL:
+                    case Occupant::EMPTY:
+                        wide_grid.back().emplace_back(conv);
+                        wide_grid.back().emplace_back(conv);
+                    break;
+                    case Occupant::BOX:
+                        wide_grid.back().emplace_back(Occupant::BOX_LEFT);
+                        wide_grid.back().emplace_back(Occupant::BOX_RIGHT);
+                    break;
+                    case Occupant::BOT:
+                        wide_grid.back().emplace_back(Occupant::EMPTY);
+                        start_bot_wide = { wide_grid.back().size() - 1, wide_grid.size() - 1 };
+                        wide_grid.back().emplace_back(Occupant::EMPTY);
+                    break;
+                    default: throw std::logic_error("No");
                 }
             }
         }
@@ -132,30 +154,179 @@ CLASS_DEF(DAY) {
         throw std::logic_error("shouldn't reach this.");
     }
 
+    static bool try_move_big_box(Dir d, Grid& g, std::pair<int,int> boxpos) {
+        // boxes are wide, so left/right moves are easier, no double recursion.
+        switch (d) {
+            case Dir::LEFT: case Dir::RIGHT: {
+                auto intended = boxpos;
+                Occupant o = g[intended.second][intended.first].occupant;
+                while (o == Occupant::BOX_LEFT || o == Occupant::BOX_RIGHT) {
+                    // std::cout << " big box horiz move scan... " << intended.first << ", " << intended.second << "\n";
+                    intended = map_pos(d, intended);
+                    o = g[intended.second][intended.first].occupant;
+                }
+
+                switch(o) {
+                    case Occupant::EMPTY: { // splendid, the boxes can be moved.
+                        Dir rdir = d == Dir::LEFT ? Dir::RIGHT : Dir::LEFT;
+                        while (intended != boxpos) {
+                            auto next = map_pos(rdir, intended);
+                            g[intended.second][intended.first].occupant = g[next.second][next.first].occupant;
+                            g[next.second][next.first].occupant = Occupant::EMPTY;
+                            intended = next;
+                        }
+                        return true;
+                    }
+                    case Occupant::WALL: // do not mutate the grid. We cannot move here.
+                        return false;
+                    default: throw std::logic_error("Impossible");
+                }
+            }
+            case Dir::DOWN: case Dir::UP: {
+
+
+                // ok let's check, CAN we move this? This is only if this and the twin's box above (may not be the same) can move!
+                // Do not move immediately, let the entire recursion tree collapse first. In case a part of the tree can move but not another part!!
+                bool can_move = can_move_big_box_vertical(d, boxpos, g);
+                if (can_move) { // great! let's recursively move these things then.
+                    move_big_box_vertical(d, boxpos, g);
+                }
+
+                return can_move;
+            }
+
+            default: throw std::logic_error("Unknown dir type");
+        }
+
+        throw std::logic_error("unreachable");
+    }
+
+    static void move_big_box_vertical(Dir d, std::pair<int,int> boxpos, Grid& g) {
+        auto next_p = map_pos(d, boxpos);
+
+        auto here = g[boxpos.second][boxpos.first].occupant;
+        auto next = g[next_p.second][next_p.first].occupant;
+
+        auto twin = boxpos;
+        switch (here) {
+            case Occupant::BOX_LEFT: // the twin is to the right.
+                twin = map_pos(Dir::RIGHT, boxpos);
+            break;
+            case Occupant::BOX_RIGHT:
+                twin = map_pos(Dir::LEFT, boxpos);
+            break;
+            default: throw std::logic_error("Not an L or R box type");
+        }
+        auto twin_next_p = map_pos(d, twin);
+        auto twin_next_occupant = g[twin_next_p.second][twin_next_p.first].occupant;
+        auto twin_occupant = g[twin.second][twin.first].occupant;
+
+        if (next != Occupant::BOX_LEFT &&
+            next != Occupant::BOX_RIGHT &&
+            twin_next_occupant != Occupant::BOX_LEFT &&
+            twin_next_occupant != Occupant::BOX_RIGHT
+        ) { // we are done, no more boxes
+
+            assert(next == Occupant::EMPTY); // can_move_big_box_vertical should assure us there are no walls now.
+
+            // swap positions.
+            g[next_p.second][next_p.first].occupant = here;
+            g[boxpos.second][boxpos.first].occupant = Occupant::EMPTY;
+
+            g[twin_next_p.second][twin_next_p.first].occupant = twin_occupant;
+            g[twin.second][twin.first].occupant = Occupant::EMPTY;
+        }
+
+        if (here == next) { // great, that means it just moves up, no pyramid type movement.
+            move_big_box_vertical(d, next_p, g);
+        } else { // uuah
+            if (next != Occupant::EMPTY) {
+                move_big_box_vertical(d, next_p, g);
+            }
+            if (twin_next_occupant != Occupant::EMPTY) {
+                move_big_box_vertical(d, twin_next_p, g);
+            }
+        }
+
+
+        // after all our recursions, we are ready to swap positions ourselves.
+        g[next_p.second][next_p.first].occupant = here;
+        g[boxpos.second][boxpos.first].occupant = Occupant::EMPTY;
+        g[twin_next_p.second][twin_next_p.first].occupant = twin_occupant;
+        g[twin.second][twin.first].occupant = Occupant::EMPTY;
+    }
+
+    static bool can_move_big_box_vertical(Dir d, std::pair<int,int> boxpos, const Grid& g) {
+
+        if (d != Dir::UP && d != Dir::DOWN) throw std::logic_error("Non vertical in vertical move");
+
+        auto occupant = g[boxpos.second][boxpos.first].occupant;
+
+        if (occupant == Occupant::EMPTY) return true;
+        if (occupant == Occupant::WALL) return false;
+
+        // otherwise, there must be more boxes....
+
+        auto twin = boxpos;
+        switch (occupant) {
+            case Occupant::BOX_LEFT: // the twin is to the right.
+                twin = map_pos(Dir::RIGHT, boxpos);
+            break;
+            case Occupant::BOX_RIGHT:
+                twin = map_pos(Dir::LEFT, boxpos);
+            break;
+            default: throw std::logic_error("Not an L or R box type");
+        }
+
+        return can_move_big_box_vertical(d, map_pos(d, boxpos), g) && can_move_big_box_vertical(d, map_pos(d, twin), g);
+    }
+
     static void move_bot(Dir d, Grid& g, std::pair<int,int>& botpos) {
         auto intended_next = map_pos(d, botpos);
 
-        std::cout << "mov " << intended_next.first << ", " << intended_next.second << "\n";
+        // std::cout << "mov " << intended_next.first << ", " << intended_next.second << "\n";
 
         auto go_to = g[intended_next.second][intended_next.first].occupant;
         switch (go_to) {
             case Occupant::EMPTY: // first update pos
-                std::cout << "empty\n";
+                // std::cout << "empty\n";
                 botpos = intended_next;
             case Occupant::WALL: // then we are done.
-                std::cout << "wall\n";
+                // std::cout << "wall\n";
                 return;
             case Occupant::BOT:
                 throw std::logic_error("Bot should have been removed from the grid representation");
-            case Occupant::BOX:
-                std::cout << "box!\n";
+            case Occupant::BOX: {
+                // std::cout << "box!\n";
                 bool result = try_move_box(d, g, intended_next);
                 if (result) { // grid was mutated by boxes from try_move_box
-                    std::cout << "can push\n";
+                    // std::cout << "can push\n";
                     botpos = intended_next;
                 }
                 return;
+            }
+            case Occupant::BOX_LEFT: case Occupant::BOX_RIGHT: {
+                bool result = try_move_big_box(d, g, intended_next);
+                if (result) {
+                    botpos = intended_next;
+                }
+                return;
+            }
+            default:
+                throw std::logic_error("Unknown type in move bot");
         }
+    }
+
+    static int gps_sum(const Grid& g) {
+        int gps_sum = 0;
+        for (int y = 0; y < g.size(); ++y) {
+            for (int x = 0; x < g[y].size(); ++x) {
+                if (g[y][x].occupant == Occupant::BOX || g[y][x].occupant == Occupant::BOX_LEFT) {
+                    gps_sum += 100 * y + x;
+                }
+            }
+        }
+        return gps_sum;
     }
 
     void v1() const override {
@@ -163,33 +334,53 @@ CLASS_DEF(DAY) {
         auto botpos = start_bot;
         // std::cout << botpos.first << ", " << botpos.second << "\n";
         for (auto d : movements) {
-            std::cout << "PRE STEP " << d << ": " << botpos.first << ", " << botpos.second << "\n";
-            for (auto& l : mut_copy) {
-                for (auto [occupant] : l) {
-                    std::cout << static_cast<char>(occupant);
-                }
-                std::cout << "\n";
-            }
+            // std::cout << "PRE STEP " << d << ": " << botpos.first << ", " << botpos.second << "\n";
+            // for (auto& l : mut_copy) {
+            //     for (auto [occupant] : l) {
+            //         std::cout << static_cast<char>(occupant);
+            //     }
+            //     std::cout << "\n";
+            // }
 
             move_bot(d, mut_copy, botpos);
         }
 
         // get gps coords of boxes.
-        int gps_sum = 0;
-        for (int y = 0; y < mut_copy.size(); ++y) {
-            for (int x = 0; x < mut_copy[y].size(); ++x) {
-                if (mut_copy[y][x].occupant == Occupant::BOX) {
-                    gps_sum += 100 * y + x;
-                }
-            }
-        }
-
-        reportSolution(gps_sum);
+        reportSolution(gps_sum(mut_copy));
     }
 
     void v2() const override {
-        reportSolution(0);
+        auto mut_copy = wide_grid;
+
+        auto botpos = start_bot_wide;
+        for (auto d : movements) {
+            // std::cout << "PRE STEP " << d << ": " << botpos.first << ", " << botpos.second << "\n";
+            // for (auto& l : mut_copy) {
+            //     for (auto [occupant] : l) {
+            //         std::cout << static_cast<char>(occupant);
+            //     }
+            //     std::cout << "\n";
+            // }
+            move_bot(d, mut_copy, botpos);
+        }
+
+        // std::cout << "FINAL\n";
+        // for (auto& l : mut_copy) {
+        //     for (auto [occupant] : l) {
+        //         std::cout << static_cast<char>(occupant);
+        //     }
+        //     std::cout << "\n";
+        // }
+
+        reportSolution(gps_sum(mut_copy));
     }
+
+    // for (auto& l : wide_grid) {
+    //     for (auto [occupant] : l) {
+    //         std::cout << static_cast<char>(occupant);
+    //     }
+    //     std::cout << "\n";
+    // }
 
     void parseBenchReset() override {
         movements.clear();
@@ -199,7 +390,9 @@ CLASS_DEF(DAY) {
     private:
     std::vector<Dir> movements;
     Grid grid;
+    Grid wide_grid;
     std::pair<int,int> start_bot;
+    std::pair<int,int> start_bot_wide;
 };
 
 } // namespace
