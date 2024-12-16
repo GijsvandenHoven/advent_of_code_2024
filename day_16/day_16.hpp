@@ -34,6 +34,12 @@ inline std::ostream& operator<<(std::ostream& os, const Node& n) {
     return os;
 }
 
+struct PathComparator {
+    bool operator()(const std::pair<int, const Node*>& a, const std::pair<int, const Node*>& b) const {
+        return a.first > b.first;
+    }
+};
+
 CLASS_DEF(DAY) {
     public:
     DEFAULT_CTOR_DEF(DAY)
@@ -90,34 +96,28 @@ CLASS_DEF(DAY) {
             {
                 auto iter = graph[0].find({k.first-1, k.second});
                 if (iter != graph[0].end()) {
-                    Edge e = { iter->second, 1 };
-                    graph[0].find(k)->second->out.emplace_back(std::move(e));
+                    graph[0].find(k)->second->out.emplace_back(iter->second, 1);
                 }
             }
             // south
             {
                 auto iter = graph[1].find({k.first+1, k.second});
                 if (iter != graph[1].end()) {
-                    Edge e = { iter->second, 1 };
-                    graph[1].find(k)->second->out.emplace_back(std::move(e));
+                    graph[1].find(k)->second->out.emplace_back(iter->second, 1);
                 }
             }
             // east
             {
                 auto iter = graph[2].find({k.first, k.second+1});
                 if (iter != graph[2].end()) {
-                    Edge e = { iter->second, 1 };
-                    graph[2].find(k)->second->out.emplace_back(std::move(e));
+                    graph[2].find(k)->second->out.emplace_back(iter->second, 1);
                 }
             }
             // west
             {
                 auto iter = graph[3].find({k.first, k.second-1});
                 if (iter != graph[3].end()) {
-                    // std::cout << "West: " << k.first << ", " << k.second << " to " << iter->first.first << ", " << iter->first.second << "\n";
-
-                    Edge e = { iter->second, 1 };
-                    graph[3].find(k)->second->out.emplace_back(std::move(e));
+                    graph[3].find(k)->second->out.emplace_back(iter->second, 1);
                 }
             }
         }
@@ -158,8 +158,51 @@ CLASS_DEF(DAY) {
         }
     }
 
+    int dijkstra(const std::pair<int,int>& start_coord, const std::pair<int,int>& end_coord) const {
+        // always start facing east.
+        // reference north, south, east, west, so index 2.
+        auto iter = graph[2].find(start_coord);
+        if (iter == graph[2].end()) throw std::logic_error("no start");
+        const auto& start_node = iter->second;
+
+        std::map<Node *, int> costs;
+        for (auto& layer : graph) {
+            for (auto& [k, v] : layer) {
+                costs[v.get()] = 999'999'999;
+            }
+        }
+        costs[start_node.get()] = 0;
+
+        std::priority_queue<std::pair<int, const Node*>, std::vector<std::pair<int, const Node*>>, PathComparator> queue;
+        queue.emplace(0, start_node.get());
+
+        while (! queue.empty()) {
+            auto& [cost, node] = queue.top();
+
+            for (auto& edge : node->out) {
+                auto* neighbour_node = edge.to.get();
+                auto node_iter = costs.find(neighbour_node);
+                if (node_iter == costs.end()) throw std::logic_error("Cannot find a node");
+                int neighbour_cost = node_iter->second;
+
+                if (cost + edge.cost < neighbour_cost) {
+                    std::cout << "Relax cost of " << node_iter->first->coords.first << ", " << node_iter->first->coords.second << " from " << neighbour_cost << " to " << cost + edge.cost << "\n";
+
+                    node_iter->second = cost + edge.cost;
+                    queue.emplace(node_iter->second, node_iter->first);
+                }
+            }
+
+            queue.pop();
+        }
+
+        return 0;
+    }
+
     void v1() const override {
-        reportSolution(0);
+        print_graph();
+
+        reportSolution(dijkstra(start, end));
     }
 
     void v2() const override {
