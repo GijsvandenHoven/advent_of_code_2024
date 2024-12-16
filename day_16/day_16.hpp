@@ -185,8 +185,14 @@ CLASS_DEF(DAY) {
                 if (node_iter == costs.end()) throw std::logic_error("Cannot find a node");
                 int neighbour_cost = node_iter->second;
 
+                if (cost + edge.cost > 10000 && neighbour_cost != 999'999'999) {
+                    std::cout << "!!! undefined behavior?\n";
+                    std::cout << "doing node " << node->coords.first << ", " << node->coords.second << " to edge c " << (cost + edge.cost) << "\n";
+                    throw std::logic_error("?!");
+                }
+
                 if (cost + edge.cost < neighbour_cost) {
-                    std::cout << "Relax cost of " << node_iter->first->coords.first << ", " << node_iter->first->coords.second << " from " << neighbour_cost << " to " << cost + edge.cost << "\n";
+                    std::cout << "Relax cost of " << node_iter->first->coords.first << ", " << node_iter->first->coords.second << " from " << neighbour_cost << " to " << (cost + edge.cost) << "\n";
 
                     node_iter->second = cost + edge.cost;
                     queue.emplace(node_iter->second, node_iter->first);
