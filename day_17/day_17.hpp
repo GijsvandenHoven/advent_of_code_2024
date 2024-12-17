@@ -31,6 +31,23 @@ class Computer {
 public:
     Computer(): A(-1), B(-1), C(-1) {}
 
+    Computer(const Computer& other): A(other.A), B(other.B), C(other.C), iptr(other.iptr), code(other.code) {
+        ss.str(other.ss.str());
+    }
+
+    Computer& operator=(Computer&& other) noexcept {
+        if (this != &other) {
+            std::swap(A, other.A);
+            std::swap(B, other.B);
+            std::swap(C, other.C);
+            ss = std::move(other.ss);
+            std::swap(iptr, other.iptr);
+            code = std::move(other.code);
+        }
+
+        return *this;
+    }
+
     explicit Computer(std::ifstream& initialisation): A(-1), B(-1), C(-1) {
         {
             std::string line;
@@ -78,10 +95,6 @@ public:
             int maybe_comma = ss.get(); // comma
             if (maybe_comma != ',') break;
         }
-
-        for (auto& c : code) {
-            std::cout << static_cast<int>(c) << ",";
-        }
     }
 
     [[nodiscard]] int64_t get_combo_operand(uint8_t val) const {
@@ -99,41 +112,48 @@ public:
     }
 
     void adv(int8_t operand) {
+        // std::cout << "adv\n";
         int64_t op = get_combo_operand(operand);
         A = A / (1 << op);
     }
 
     void bxl(int8_t operand) {
+        // std::cout << "bxl\n";
         B = B ^ operand;
     }
 
     void bst(int8_t operand) {
+        // std::cout << "bst\n";
         int64_t op = get_combo_operand(operand);
         B = op & (0b111);
     }
 
     void jnz(int8_t operand) {
+        // std::cout << "jnz\n";
         if (A == 0) return;
 
         iptr = static_cast<uint8_t>(operand);
-        iptr -= 2; // it will increment after the instruction completes =)
     }
 
     void bxc(int8_t /*legacy: ignores op*/) {
+        // std::cout << "bxc\n";
         B = B ^ C;
     }
 
     void out(int8_t operand) {
+        // std::cout << "out\n";
         int64_t op = get_combo_operand(operand);
         ss << (op & 0b111) << ","; // WARN: not to spec, last digit should not have a comma, truncate this on the output :)
     }
 
     void bdv(int8_t operand) {
+        // std::cout << "bdv\n";
         int64_t op = get_combo_operand(operand);
         B = A / (1 << op);
     }
 
     void cdv(int8_t operand) {
+        // std::cout << "cdv\n";
         int64_t op = get_combo_operand(operand);
         C = A / (1 << op);
     }
@@ -151,7 +171,24 @@ public:
     }
 
     void execute() { // execute the program
+        while (true) {
+            // fetch
+            // std::cout << "exec: '" << iptr << "', ";
+            if (iptr < 0 || iptr >= code.size()) break; // fetch past program bounds.
+            int8_t opcode = code[iptr];
+            iptr++;
 
+            // std::cout << static_cast<int>(opcode) << ", ";
+            if (iptr < 0 || iptr >= code.size()) break; // fetch past program bounds.
+            int8_t operand = code[iptr];
+            iptr++; // jmp will handle the -2 for us dont worry about it.
+
+            // std::cout << static_cast<int>(operand) << "...";
+            if (opcode < 0 || opcode >= opcodes.size()) throw std::logic_error("unknown opcode");
+
+            // execute
+            opcodes[opcode](operand);
+        }
     }
 };
 
@@ -160,14 +197,18 @@ CLASS_DEF(DAY) {
     DEFAULT_CTOR_DEF(DAY)
 
     void parse(std::ifstream &input) override {
-        c = Computer(input);
+        c = std::move(Computer(input));
     }
 
     void v1() const override {
-        reportSolution(0);
+        Computer copy = c;
+        copy.execute();
+        std::string r;
+        copy.get_out(r);
+        reportSolution(r);
     }
 
-    void v2() const override {
+    void v2() const override { // holy quine!!
         reportSolution(0);
     }
 
