@@ -40,6 +40,11 @@ struct PathComparator {
     }
 };
 
+struct PathEntry {
+    std::vector<const Node*> parents;
+    int cost = 999999999;
+};
+
 CLASS_DEF(DAY) {
     public:
     DEFAULT_CTOR_DEF(DAY)
@@ -80,7 +85,7 @@ CLASS_DEF(DAY) {
             ++row;
         }
 
-        char facing[4] = {'N', 'E', 'S', 'W'};
+        char facing[4] = {'N', 'S', 'E', 'W'};
         for (const auto& [k,v] : cloud) {
             for (int i = 0; i < graph.size(); ++i) {
                 auto& layer = graph[i];
@@ -158,7 +163,7 @@ CLASS_DEF(DAY) {
         }
     }
 
-    int dijkstra(const std::pair<int,int>& start_coord, const std::pair<int,int>& end_coord) const {
+    int dijkstra(const std::pair<int,int>& start_coord, const std::pair<int,int>& end_coord, std::map<const Node*, PathEntry>& path) const {
         // always start facing east.
         // reference north, south, east, west, so index 2.
         auto iter = graph[2].find(start_coord);
@@ -177,42 +182,100 @@ CLASS_DEF(DAY) {
         queue.emplace(0, start_node.get());
 
         while (! queue.empty()) {
-            auto& [cost, node] = queue.top();
+            auto [cost, node] = queue.top();
+            queue.pop();
 
             for (auto& edge : node->out) {
                 auto* neighbour_node = edge.to.get();
                 auto node_iter = costs.find(neighbour_node);
                 if (node_iter == costs.end()) throw std::logic_error("Cannot find a node");
                 int neighbour_cost = node_iter->second;
+                int contend_cost = cost + edge.cost;
 
-                if (cost + edge.cost > 10000 && neighbour_cost != 999'999'999) {
-                    std::cout << "!!! undefined behavior?\n";
-                    std::cout << "doing node " << node->coords.first << ", " << node->coords.second << " to edge c " << (cost + edge.cost) << "\n";
-                    throw std::logic_error("?!");
-                }
+                if (contend_cost < neighbour_cost) {
+                    // when we relax an edge, also update the parent.
 
-                if (cost + edge.cost < neighbour_cost) {
-                    std::cout << "Relax cost of " << node_iter->first->coords.first << ", " << node_iter->first->coords.second << " from " << neighbour_cost << " to " << (cost + edge.cost) << "\n";
-
-                    node_iter->second = cost + edge.cost;
+                    node_iter->second = contend_cost;
                     queue.emplace(node_iter->second, node_iter->first);
                 }
-            }
 
-            queue.pop();
+                if (contend_cost <= neighbour_cost) {
+                    auto path_iter = path.find(node_iter->first);
+                    if (path_iter == path.end()) {
+                        PathEntry p;
+                        p.cost = contend_cost;
+                        p.parents.emplace_back(node);
+                        path[node_iter->first] = p;
+                        //std::cout << "emplace new " << contend_cost << ", " << node_iter->first->coords.first << ", " << node_iter->first->coords.second << "\n";
+                    } else {
+                        if (path_iter->second.cost == contend_cost) { // this edge is equal so push it.
+                            path_iter->second.parents.emplace_back(node);
+                            //std::cout << "add " << contend_cost << "\n";
+                        } else { // this edge is better so usurp the others.
+                            path_iter->second.cost = contend_cost;
+                            path_iter->second.parents.clear();
+                            path_iter->second.parents.emplace_back(node);
+                            //std::cout << "usurp " << contend_cost << "\n";
+                        }
+                    }
+                }
+            }
         }
 
-        return 0;
+        int best_cost = 999999999;
+        for (auto& layer : graph) {
+            auto endNode = layer.find(end)->second;
+            best_cost = std::min(best_cost, costs.find(endNode.get())->second);
+        }
+
+        return best_cost;
+    }
+
+    static void backtrack_best(std::set<const Node*>& p, const PathEntry& here, const Node* goal, const std::map<const Node*, PathEntry>& path) {
+        for (const auto* parent : here.parents) {
+            // std::cout << parent->coords.first << ", " << parent->coords.second << "\n";
+            if (p.contains(parent)) continue;
+            p.emplace(parent);
+            if (parent == goal) {
+                // std::cout << "goalreached\n";
+                return;
+            }
+
+            backtrack_best(p, path.find(parent)->second, goal, path);
+        }
     }
 
     void v1() const override {
-        print_graph();
-
-        reportSolution(dijkstra(start, end));
+        std::map<const Node*, PathEntry> dontcare; // problem 2 thing.
+        reportSolution(dijkstra(start, end, dontcare));
     }
 
     void v2() const override {
-        reportSolution(0);
+        std::map<const Node*, PathEntry> backpath;
+        int best_cost = dijkstra(start, end, backpath);
+
+        std::set<const Node*> on_best;
+        for (auto& layer : graph) {
+            auto* endptr = layer.find(end)->second.get();
+            auto end_iter = backpath.find(endptr);
+            if (end_iter == backpath.end()) continue;
+            if (end_iter->second.cost > best_cost) continue;
+
+            // std::cout << "found one\n";
+
+            backtrack_best(on_best, end_iter->second, graph[2].find(start)->second.get(), backpath);
+            on_best.emplace(endptr);
+        }
+
+
+        // std::cout << on_best.size() << "\n"; // we still need to collapse the graph back to coords...
+        std::set<std::pair<int,int>> coords_on_path;
+
+        for (auto * n : on_best) {
+            coords_on_path.emplace(n->coords);
+        }
+
+        reportSolution(coords_on_path.size());
     }
 
     void parseBenchReset() override {
