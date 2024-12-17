@@ -16,6 +16,17 @@ class Computer {
     int64_t C;
     std::ostringstream ss;
     int iptr = 0;
+    std::array<std::function<void(int8_t)>, 8> opcodes = {
+        [this](int8_t o){ this->adv(o); },
+        [this](int8_t o){ this->bxl(o); },
+        [this](int8_t o){ this->bst(o); },
+        [this](int8_t o){ this->jnz(o); },
+        [this](int8_t o){ this->bxc(o); },
+        [this](int8_t o){ this->out(o); },
+        [this](int8_t o){ this->bdv(o); },
+        [this](int8_t o){ this->cdv(o); },
+    };
+    std::vector<int8_t> code;
 
 public:
     Computer(): A(-1), B(-1), C(-1) {}
@@ -62,11 +73,14 @@ public:
 
         while (ss.good()) {
             int val = ss.get(); // digit - every program consists of 1 digit operands.
+            code.emplace_back(static_cast<int8_t>(val - '0'));
+
             int maybe_comma = ss.get(); // comma
             if (maybe_comma != ',') break;
+        }
 
-            // read in program...
-            std::cout << val << "\n";
+        for (auto& c : code) {
+            std::cout << static_cast<int>(c) << ",";
         }
     }
 
@@ -84,42 +98,42 @@ public:
         }
     }
 
-    void adv(int operand) {
+    void adv(int8_t operand) {
         int64_t op = get_combo_operand(operand);
         A = A / (1 << op);
     }
 
-    void bxl(int operand) {
+    void bxl(int8_t operand) {
         B = B ^ operand;
     }
 
-    void bst(int operand) {
+    void bst(int8_t operand) {
         int64_t op = get_combo_operand(operand);
         B = op & (0b111);
     }
 
-    void jnz(int operand) {
+    void jnz(int8_t operand) {
         if (A == 0) return;
 
-        iptr = operand;
+        iptr = static_cast<uint8_t>(operand);
         iptr -= 2; // it will increment after the instruction completes =)
     }
 
-    void bxc(int /*legacy: ignores op*/) {
+    void bxc(int8_t /*legacy: ignores op*/) {
         B = B ^ C;
     }
 
-    void out(int operand) {
+    void out(int8_t operand) {
         int64_t op = get_combo_operand(operand);
         ss << (op & 0b111) << ","; // WARN: not to spec, last digit should not have a comma, truncate this on the output :)
     }
 
-    void bdv(int operand) {
+    void bdv(int8_t operand) {
         int64_t op = get_combo_operand(operand);
         B = A / (1 << op);
     }
 
-    void cdv(int operand) {
+    void cdv(int8_t operand) {
         int64_t op = get_combo_operand(operand);
         C = A / (1 << op);
     }
