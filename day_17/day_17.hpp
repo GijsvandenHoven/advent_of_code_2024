@@ -192,69 +192,11 @@ public:
         }
     }
 
-    // int64_t find_quine() {
-    //     int64_t testing = 0;
-    //     int64_t initB = B;
-    //     int64_t initC = C;
-    //
-    //     std::vector<int8_t> out_so_far;
-    //     int out_id = 0;
-    //     // bruteforce for output. do early exits.
-    //
-    //     int best = 0;
-    //
-    //     while (true) {
-    //         // set up execution here
-    //         reset(testing, initB, initC);
-    //         // std::cout << "try " << A << ", " << B << ", " << C << "\n";
-    //         while (true) {
-    //             // fetch
-    //             // std::cout << "exec: '" << iptr << "', ";
-    //             if (iptr < 0 || iptr >= code.size()) break; // fetch past program bounds.
-    //             int8_t opcode = code[iptr];
-    //             iptr++;
-    //
-    //             // std::cout << static_cast<int>(opcode) << ", ";
-    //             if (iptr < 0 || iptr >= code.size()) break; // fetch past program bounds.
-    //             int8_t operand = code[iptr];
-    //             iptr++; // jmp will handle the -2 for us dont worry about it.
-    //
-    //             // std::cout << static_cast<int>(operand) << "...";
-    //             if (opcode < 0 || opcode >= opcodes.size()) throw std::logic_error("unknown opcode");
-    //
-    //             // execute
-    //             opcodes[opcode](operand);
-    //
-    //             if (opcode == 5) {
-    //                 // std::cout << "did out " << last_out << "\n";
-    //                 // check if last out matches code...
-    //                 out_so_far.emplace_back(last_out);
-    //                 if (out_so_far.back() != code[out_id]) {
-    //                     if (out_id >= best) {
-    //                         best = out_id;
-    //                         std::cout << "matching best at " << testing << " outid " << out_id << "\n";
-    //                     }
-    //                     // reset
-    //                     // std::cout << testing << " fails\n";
-    //                     out_id = 0;
-    //                     out_so_far.clear();
-    //                     break;
-    //                 } else {
-    //                     ++out_id;
-    //                 }
-    //             }
-    //         }
-    //         // program terminated. is it a  quine?
-    //         if (out_so_far == code) {
-    //             break;
-    //         } else {
-    //             ++testing;
-    //         }
-    //     }
-    //
-    //
-    //     return testing;
-    // }
+    int64_t code_to_number() const {
+        return std::accumulate(code.begin(), code.end(),  0LL, [this](int64_t sum, int8_t digit) {
+            return (sum * 10) + digit;
+        });
+    }
 };
 
 CLASS_DEF(DAY) {
@@ -326,12 +268,9 @@ CLASS_DEF(DAY) {
     }
 
     static int64_t numerical_analysis(int64_t value, int64_t seeking) {
+        // std::cout << "from " << value << " seek " << seeking << "\n";
 
-        std::cout << "starting from " << value << " We want to find " << seeking << "\n";
-
-        int64_t conclusion = -1;
-
-        for (int i = 0; i < 10; ++i) {
+        auto fast_simulate = [value](int i) {
             int64_t A = value + i;
             int64_t B = 0;
             int64_t C = 0;
@@ -347,16 +286,29 @@ CLASS_DEF(DAY) {
                 out += (B & 0b111);
             } while (A != 0);
 
-            if (out == seeking) {
-                std::cout << "\tgot " << out << " after " << i <<"\n";
-                conclusion = value + i;
-                break;
+            return out;
+        };
+
+        for (int i = 0; i < 8; ++i) {
+            if (const int64_t out = fast_simulate(i); out == seeking) {
+                return value + i;
             }
         }
 
-        if (conclusion < 0) throw std::logic_error("could not find.");
+        // roblem: not found in the next 8 digits, doing a brute force. This does not work on a general solution, but it works here :3
+        // normally you should find all the "islands" per iteration and recurse with that * 8 as the starting point to check, one of the islands should lead here.
+        int i = 0;
+        while (true) {
+            if (i != 0 && i % 100'000'000 == 0) std::cout << "brute forced to: " << value + i << "\n";
 
-        return conclusion;
+            int64_t out = fast_simulate(i);
+            if (out == seeking) {
+                // std::cout << "brute force conclude with " << i << "\n";
+                return value + i;
+            }
+
+            ++i;
+        }
     }
 
     void v1() const override {
@@ -368,41 +320,15 @@ CLASS_DEF(DAY) {
     }
 
     void v2() const override { // holy quine!!
-        static constexpr int64_t goal = 2411750343165530LL;
-        std::cout << "for reference: the goal is " << goal << "\n";
-        std::vector<int64_t> milestones;
-        milestones.emplace_back(numerical_analysis(0, goal % 10LL));
-        milestones.emplace_back(numerical_analysis(milestones.back() * 8, goal % 100LL));
-        milestones.emplace_back(numerical_analysis(milestones.back() * 8, goal % 1'000LL));
-        milestones.emplace_back(numerical_analysis(milestones.back() * 8, goal % 10'000LL));
-        milestones.emplace_back(numerical_analysis(milestones.back() * 8, goal % 100'000LL));
-        milestones.emplace_back(numerical_analysis(milestones.back() * 8, goal % 1'000'000LL));
-        milestones.emplace_back(numerical_analysis(milestones.back() * 8, goal % 10'000'000LL));
-        milestones.emplace_back(numerical_analysis(milestones.back() * 8, goal % 100'000'000LL));
-        milestones.emplace_back(numerical_analysis(milestones.back() * 8, goal % 1'000'000'000LL));
-        milestones.emplace_back(numerical_analysis(milestones.back() * 8, goal % 10'000'000'000LL));
-        milestones.emplace_back(numerical_analysis(milestones.back() * 8, goal % 100'000'000'000LL));
-        milestones.emplace_back(numerical_analysis(milestones.back() * 8, goal % 1'000'000'000'000LL));
-        // milestones.emplace_back(numerical_analysis(milestones.back() * 8, goal % 10'000'000'000'000LL)); // suddenly cannot find.
-        milestones.emplace_back(numerical_analysis(484061601100, goal % 10'000'000'000'000LL)); // fuck it, bruteforce.
-        milestones.emplace_back(numerical_analysis(milestones.back() * 8, goal % 100'000'000'000'000LL));
-        milestones.emplace_back(numerical_analysis(milestones.back() * 8, goal % 1'000'000'000'000'000LL));
+        const int64_t goal = c.code_to_number();
 
-        static constexpr int64_t TEN_QUAD = 10'000'000'000'000'000LL;
-        static_assert (goal % TEN_QUAD == goal);
-        milestones.emplace_back(numerical_analysis(milestones.back() * 8, goal % TEN_QUAD));
-        std::cout << "#" << milestones.size() << ": " << milestones.back() << "\n";
+        int64_t index = 0;
+        for (int64_t mod = 10; mod < goal; mod *= 10) {
+            index = numerical_analysis(index * 8, goal % mod);
+        }
 
-        //print_next(60507697584 * 8, 1'000'000LL); // interesting: 118179096LL has a match at 7 that may be causing a dead end, but there are also candidates at +39 onward. We may need a recursion to check all islands, but how far ahead to check for island per iteration. 512?
-        // check(std::to_string(343165530), 118179096LL);
-
-        // for (int i = 0; i < milestones.size(); ++i) {
-        //     std::cout << i << ": ";
-        //     std::bitset<50> as_binary = (milestones[i]);
-        //     std::cout << as_binary << "\n";
-        // }
-
-        reportSolution(milestones.back());
+        // last step: we know where all but the first digit of the quine will repeat in a quine-digited number for the first time, so seek from there.
+        reportSolution(numerical_analysis(index * 8, goal));
     }
 
     void parseBenchReset() override {
