@@ -111,7 +111,7 @@ CLASS_DEF(DAY) {
     void v2() const override {
         Coord c{};
         for (int i = 0; i <= spots.size(); ++i) { // less or equal, we want to try any time including zero.
-            std::cout << i << "\n";
+            // std::cout << i << "\n";
 
             if (BFS(i) == -1) {
                 c = spots[i - 1];
