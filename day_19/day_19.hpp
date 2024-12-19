@@ -7,6 +7,8 @@
 
 #define DAY 19
 
+NAMESPACE_DEF(DAY) {
+
 struct Towel {
     std::string pattern;
 
@@ -22,8 +24,6 @@ struct Towel {
         return true;
     }
 };
-
-NAMESPACE_DEF(DAY) {
 
 CLASS_DEF(DAY) {
     public:
@@ -49,6 +49,35 @@ CLASS_DEF(DAY) {
         while (std::getline(input, available)) {
             desired_patterns.emplace_back(available);
         }
+    }
+
+    int64_t memo(const std::string& goal, int pos, std::vector<int64_t>& cache) const {
+        // base case 1 : end reached. No cache emplacement here.
+        if (pos == goal.size()) {
+            return 1;
+        }
+
+        // base case 2: check cache
+        if (cache[pos] != -1) {
+            return cache[pos]; // for each match for each way, this is the # of ways from this pos.
+        }
+
+        // recursion: for all matches check possible then add to cache.
+        std::vector<int> possible_continues;
+        for (auto& t : available_patterns) {
+            if (t.canMatch(goal, pos)) {
+                possible_continues.emplace_back(t.pattern.size());
+            }
+        }
+
+        int64_t total = 0;
+        for (auto cont : possible_continues) {
+            total += memo(goal, pos + cont, cache);
+        }
+
+        cache[pos] = total;
+
+        return total;
     }
 
     bool brute_force(const std::string& goal, int pos = 0) const {
@@ -78,17 +107,26 @@ CLASS_DEF(DAY) {
         int possible = 0;
         for (const auto& query : desired_patterns) {
             possible += brute_force(query);
-            std::cout << possible << "\n";
         }
         reportSolution(possible);
     }
 
     void v2() const override {
-        reportSolution(0);
+        int64_t possible = 0;
+        for (const auto& query : desired_patterns) {
+            std::vector<int64_t> cache (query.size(), -1);
+            assert(cache.size() == query.size());
+
+            auto r = memo(query, 0, cache);
+            // std::cout << query << " = " << r << "\n";
+            possible += r;
+        }
+        reportSolution(possible);
     }
 
     void parseBenchReset() override {
-
+        desired_patterns.clear();
+        available_patterns.clear();
     }
 
     private:
