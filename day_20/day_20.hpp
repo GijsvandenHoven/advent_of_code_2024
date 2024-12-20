@@ -157,7 +157,7 @@ CLASS_DEF(DAY) {
     }
 
     void parseBenchReset() override {
-
+        grid.clear();
     }
 
     private:
