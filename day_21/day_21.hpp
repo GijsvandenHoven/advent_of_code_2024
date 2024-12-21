@@ -590,13 +590,78 @@ CLASS_DEF(DAY) {
 
             std::vector<Dir> current = std::move(final_seq);
             std::vector<Dir> next;
-            for (int i = 0; i < 2; ++i) {
+            for (int i = 0; i < 24; ++i) {
+                std::cout << i << "\n";
+                std::cout << current.size() << "\n";
                 generate_step(current, next);
                 current = std::move(next);
                 next.clear(); // i dont think this is necessary? im not sure about move semantics and husk objects anymore.
             }
 
-            auto code_len = static_cast<int64_t>(current.size());
+            // we now have one more layer to go, let's not generate it. calculate this.
+            std::cout << "Done grinding with " << current.size() << " items\n";
+
+
+            auto decider = [](Dir from, Dir to) {
+                switch (from) {
+                    case Dir::FWD:
+                        switch (to) {
+                            case Dir::FWD: return 1; // A
+                            case Dir::UP: return 2; // <A
+                            case Dir::RIGHT: return 2; //vA
+                            case Dir::DOWN: return 3; // v<A
+                            case Dir::LEFT: return 4; //v<<A
+                            default: throw std::logic_error("No!");
+                        }
+                    case Dir::UP:
+                        switch (to) {
+                            case Dir::FWD: return 2; // >A
+                            case Dir::UP: return 1; // A
+                            case Dir::RIGHT: return 3; //v>A
+                            case Dir::DOWN: return 2; // vA
+                            case Dir::LEFT: return 3; //v<A
+                            default: throw std::logic_error("No!");
+                        }
+                    case Dir::RIGHT:
+                        switch (to) {
+                            case Dir::FWD: return 2; // ^A
+                            case Dir::UP: return 3; // <^A
+                            case Dir::RIGHT: return 1; //A
+                            case Dir::DOWN: return 3; // v<A
+                            case Dir::LEFT: return 3; //<<A
+                            default: throw std::logic_error("No!");
+                        }
+                    case Dir::DOWN:
+                        switch (to) {
+                            case Dir::FWD: return 3; // >^A
+                            case Dir::UP: return 2; // ^A
+                            case Dir::RIGHT: return 2; // >A
+                            case Dir::DOWN: return 1; // A
+                            case Dir::LEFT: return 2; // <A
+                            default: throw std::logic_error("No!");
+                        }
+                    case Dir::LEFT:
+                        switch (to) {
+                            case Dir::FWD: return 4; // >>^A
+                            case Dir::UP: return 3; // >^A
+                            case Dir::RIGHT: return 3; // >>A
+                            case Dir::DOWN: return 2; // >A
+                            case Dir::LEFT: return 1; // A
+                            default: throw std::logic_error("No!");
+                        }
+                    default: throw std::logic_error("No!");
+                }
+            };
+
+            auto from = Dir::FWD;
+            int64_t size = 0;
+            for (auto to : current) {
+                size += decider(from, to);
+                from = to;
+            }
+
+            auto code_len = size;
+            //auto code_len = static_cast<int64_t>(current.size());
             int64_t this_one = code_len * code.numeric_value();
 
             complexity += this_one;
@@ -606,110 +671,97 @@ CLASS_DEF(DAY) {
     }
 
     void v2() const override {
-        constexpr int DEPTH = 24;
-        int64_t grand_total = 0;
-        // std::array<std::unordered_map<Dir, std::unordered_map<Dir, int64_t>>, DEPTH> cache {};
-        //
-        // for (auto& code : codes) {
-        //     std::vector<Dir> keypad_seq; // this is the directional pad input to drive the numeric pad
-        //
-        //     // keypad to first bot
-        //     auto current_char = 'A';
-        //     for (auto c : code.code) {
-        //         move_keypad(current_char, c, keypad_seq);
-        //         current_char = c;
-        //     }
-        //
-        //     for (auto& c : keypad_seq) std::cout << static_cast<char>(c); std::cout << "\n";
-        //
-        //     int64_t total = 0;
-        //     auto current = Dir::FWD;
-        //     for (auto& n : keypad_seq) {
-        //         auto this_r = memo_find_count(current, n, cache, DEPTH);
-        //         // std::cout << "completed " << static_cast<char>(current) << " - " << static_cast<char>(n) << ": " << this_r << "\n";
-        //         total += this_r;
-        //         current = n;
-        //     }
-        //     grand_total += (total * code.numeric_value());
-        // }
+        int64_t complexity = 0;
+        for (auto& code : codes) {
+            std::vector<Dir> final_seq; // this is the directional pad input to drive the numeric pad
 
-        test();
+            // keypad to first bot
+            auto current_char = 'A';
+            for (auto c : code.code) {
+                move_keypad(current_char, c, final_seq);
+                current_char = c;
+            }
 
-        reportSolution(grand_total);
-    }
-
-    void test() const { // brute force and DP compare at depths.
-        constexpr int DEPTH = 2;
-        std::array<std::unordered_map<Dir, std::unordered_map<Dir, int64_t>>, DEPTH> cache {};
-
-        std::vector<Dir> first = { Dir::DOWN, Dir::FWD };
-        // vA
-        // <vA                                  ^>A        // todo: try also >^A
-        // v<<A             >A      >^A         <A           v>A            ^A  (bf layer says 16, OK)
-        // <vA <A A >>^A    vA ^A   vA <^A >A   v<<A >>^A    <vA >A ^A      <A >A (bf layer says 40, OK)
-
-
-        int64_t bf_report;
-        int64_t dp_report;
-        {
-            std::vector<Dir> current = first;
+            std::vector<Dir> current = std::move(final_seq);
             std::vector<Dir> next;
-            for (int i = 0; i < DEPTH + 1; ++i) {
+            for (int i = 0; i < 24; ++i) {
+                std::cout << i << "\n";
+                std::cout << current.size() << "\n";
                 generate_step(current, next);
                 current = std::move(next);
-                std::cout << "\tBF layer says " << current.size() << "\n";
                 next.clear(); // i dont think this is necessary? im not sure about move semantics and husk objects anymore.
             }
 
-            std::cout << "Depth " << DEPTH << " BF says " << current.size() << "\n";
+            // we now have one more layer to go, let's not generate it. calculate this.
+            std::cout << "Done grinding with " << current.size() << " items\n";
 
-            bf_report = static_cast<int64_t>(current.size());
-        }
 
-        std::cout << "memo gen\n";
-        {
-            int64_t total = 0;
-            auto current = Dir::FWD;
-            for (auto& n : first) {
-                auto this_r = memo_find_count(current, n, cache, DEPTH);
-                // std::cout << "completed " << static_cast<char>(current) << " - " << static_cast<char>(n) << ": " << this_r << "\n";
-                total += this_r;
-                current = n;
+            auto decider = [](Dir from, Dir to) {
+                switch (from) {
+                    case Dir::FWD:
+                        switch (to) {
+                            case Dir::FWD: return 1; // A
+                            case Dir::UP: return 2; // <A
+                            case Dir::RIGHT: return 2; //vA
+                            case Dir::DOWN: return 3; // v<A
+                            case Dir::LEFT: return 4; //v<<A
+                            default: throw std::logic_error("No!");
+                        }
+                    case Dir::UP:
+                        switch (to) {
+                            case Dir::FWD: return 2; // >A
+                            case Dir::UP: return 1; // A
+                            case Dir::RIGHT: return 3; //v>A
+                            case Dir::DOWN: return 2; // vA
+                            case Dir::LEFT: return 3; //v<A
+                            default: throw std::logic_error("No!");
+                        }
+                    case Dir::RIGHT:
+                        switch (to) {
+                            case Dir::FWD: return 2; // ^A
+                            case Dir::UP: return 3; // <^A
+                            case Dir::RIGHT: return 1; //A
+                            case Dir::DOWN: return 3; // v<A
+                            case Dir::LEFT: return 3; //<<A
+                            default: throw std::logic_error("No!");
+                        }
+                    case Dir::DOWN:
+                        switch (to) {
+                            case Dir::FWD: return 3; // >^A
+                            case Dir::UP: return 2; // ^A
+                            case Dir::RIGHT: return 2; // >A
+                            case Dir::DOWN: return 1; // A
+                            case Dir::LEFT: return 2; // <A
+                            default: throw std::logic_error("No!");
+                        }
+                    case Dir::LEFT:
+                        switch (to) {
+                            case Dir::FWD: return 4; // >>^A
+                            case Dir::UP: return 3; // >^A
+                            case Dir::RIGHT: return 3; // >>A
+                            case Dir::DOWN: return 2; // >A
+                            case Dir::LEFT: return 1; // A
+                            default: throw std::logic_error("No!");
+                        }
+                    default: throw std::logic_error("No!");
+                }
+            };
+
+            auto from = Dir::FWD;
+            int64_t size = 0;
+            for (auto to : current) {
+                size += decider(from, to);
+                from = to;
             }
-            std::cout << "\n";
 
-            std::cout << "Depth " << DEPTH << " DP says " << total << "\n";
-            dp_report = total;
+            auto code_len = size;
+            //auto code_len = static_cast<int64_t>(current.size());
+            int64_t this_one = code_len * code.numeric_value();
+
+            complexity += this_one;
         }
 
-        if (dp_report == bf_report) {
-            std::cout << "OK\n"; return;
-        }
-
-        // get the breaking string by going less deep in BF.
-        // {
-        //     std::vector<Dir> current = first;
-        //     std::vector<Dir> next;
-        //     for (int i = 0; i < DEPTH - 3; ++i) {
-        //         generate_step(current, next);
-        //         current = std::move(next);
-        //         std::cout << "\tBF layer says " << current.size() << "\n";
-        //         next.clear(); // i dont think this is necessary? im not sure about move semantics and husk objects anymore.
-        //     }
-        //
-        //     std::cout << "this breaks: ("<< current.size() <<")\n";
-        //     for (auto& d : current) std::cout << static_cast<char>(d); std::cout << "\n";
-        //     std::cout << "BF claimed " << bf_report << ", but if we feed this exact vec to DP to do layers, it says:\n";
-        //
-        //     int64_t total = 0;
-        //     auto dp_current = Dir::FWD;
-        //     for (auto& n : current) {
-        //         auto this_r = memo_find_count(dp_current, n, cache, 3);
-        //         total += this_r;
-        //         dp_current = n;
-        //     }
-        //     std::cout << "DP says " << total << "\n";
-        // }
+        reportSolution(complexity);
     }
 
     // this is too low:
@@ -717,6 +769,8 @@ CLASS_DEF(DAY) {
 
     // too low!
     // 304299852534422
+
+    // try 307055584161760
 
     void parseBenchReset() override {
         codes.clear();
