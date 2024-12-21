@@ -7,6 +7,8 @@
 
 #define DAY 21
 
+#define I_HAVE_100GB_RAM false
+
 NAMESPACE_DEF(DAY) {
 
 struct Code {
@@ -329,6 +331,8 @@ CLASS_DEF(DAY) {
         }
     }
 
+    // this really seems to under-report slightly, but not until 6 layers deep. I do not know why, i have checked it many times.
+    // I instead bruteforced the problem, so this code is incorrect and unused!
     static int64_t memo_find_count(Dir from, Dir to, auto& cache, int rem_depth) {
         if (rem_depth == 0) { // just give a straight answer
             switch (from) {
@@ -670,8 +674,10 @@ CLASS_DEF(DAY) {
         reportSolution(complexity);
     }
 
+    // you will need 96 GB memory and 1 hour of time for this. This is truly a terrible solution.
     void v2() const override {
         int64_t complexity = 0;
+#if I_HAVE_100GB_RAM // careful, you could really fry your computer with this. get enough swap space, should take about an hour.
         for (auto& code : codes) {
             std::vector<Dir> final_seq; // this is the directional pad input to drive the numeric pad
 
@@ -760,7 +766,7 @@ CLASS_DEF(DAY) {
 
             complexity += this_one;
         }
-
+#endif
         reportSolution(complexity);
     }
 
@@ -770,7 +776,7 @@ CLASS_DEF(DAY) {
     // too low!
     // 304299852534422
 
-    // try 307055584161760
+    // try 307055584161760 - YES
 
     void parseBenchReset() override {
         codes.clear();
