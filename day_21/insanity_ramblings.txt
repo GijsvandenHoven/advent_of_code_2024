@@ -104,3 +104,8 @@ seems to be the case.
 
 // <^A
 //
+
+<A x 3 =
+v<A<A>>^Av<<A>>^AAvAA<^A>Av<A>^AAv<<A>^A>AvA^A <-- 46 len
+
+<vA<AA>>^AvAA<^A>A<v<A>>^AvA^A<vA>^A<v<A>^A>AAvA^A<v<A>A>^AAAvA<^A>A

@@ -303,7 +303,7 @@ CLASS_DEF(DAY) {
     }
 
     static int64_t memo_find_count(Dir from, Dir to, auto& cache, int rem_depth) {
-        std::cout << "\ttry f: " << static_cast<char>(from) << " - " << static_cast<char>(to) << "\n";
+        // std::cout << "\ttry f: " << static_cast<char>(from) << " - " << static_cast<char>(to) << "\n";
 
         if (rem_depth == 0) { // just give a straight answer
             switch (from) {
@@ -366,7 +366,7 @@ CLASS_DEF(DAY) {
             }
         }
 
-        std::cout << "\tdig f: " << static_cast<char>(from) << " - " << static_cast<char>(to) << "\n";
+        // std::cout << "\tdig f: " << static_cast<char>(from) << " - " << static_cast<char>(to) << "\n";
 
         auto memo = [&cache, rem_depth](Dir f, Dir t){ return memo_find_count(f, t, cache, rem_depth- 1); };
 
@@ -376,27 +376,27 @@ CLASS_DEF(DAY) {
             case Dir::FWD:
                 switch (to) {
                     case Dir::FWD: { // A
-                        option_A = memo(from, to);
+                        option_A = memo(Dir::FWD, to);
                         option_B = option_A;
                         break;
                     }
                     case Dir::UP: { // <A
                         option_A =
-                            memo(from, Dir::LEFT) +
+                            memo(Dir::FWD, Dir::LEFT) +
                                 memo(Dir::LEFT, Dir::FWD);
                         option_B = option_A;
                         break;
                     }
                     case Dir::RIGHT: { // vA
                         option_A =
-                            memo(from, Dir::DOWN) +
+                            memo(Dir::FWD, Dir::DOWN) +
                                 memo(Dir::DOWN, Dir::FWD);
                         option_B = option_A;
                         break;
                     }
                     case Dir::LEFT: { // v<<A, we are certain there is no need for <v<A, we prefer consecutive, this heuristic remains.
                         option_A =
-                            memo(from, Dir::DOWN) +
+                            memo(Dir::FWD, Dir::DOWN) +
                                 memo(Dir::DOWN, Dir::LEFT) +
                                     memo(Dir::LEFT, Dir::LEFT) + // 1.
                                         memo(Dir::LEFT, Dir::FWD);
@@ -404,11 +404,11 @@ CLASS_DEF(DAY) {
                         break;
                     }
                     case Dir::DOWN: { // multiplle choices! <vA  or  v<A
-                        option_A = memo(from, Dir::LEFT) +
+                        option_A = memo(Dir::FWD, Dir::LEFT) +
                             memo(Dir::LEFT, Dir::DOWN) +
                                 memo(Dir::DOWN, Dir::FWD);
 
-                        option_B = memo(from, Dir::DOWN) +
+                        option_B = memo(Dir::FWD, Dir::DOWN) +
                             memo(Dir::DOWN, Dir::LEFT) +
                                 memo(Dir::LEFT, Dir::FWD);
                         break;
@@ -420,27 +420,27 @@ CLASS_DEF(DAY) {
                 switch(to) {
                     case Dir::FWD: {
                         // >A
-                        option_A = memo(from, Dir::RIGHT) + memo(Dir::RIGHT, Dir::FWD);
+                        option_A = memo(Dir::FWD, Dir::RIGHT) + memo(Dir::RIGHT, Dir::FWD);
                         option_B = option_A;
                         break;
                     }
                     case Dir::UP: { // A
-                        option_A = memo(from, Dir::FWD);
+                        option_A = memo(Dir::FWD, Dir::FWD);
                         option_B = option_A;
                         break;
                     }
                     case Dir::RIGHT: { // choice! >vA  or v>A
-                        option_A = memo(from, Dir::RIGHT) + memo(Dir::RIGHT, Dir::DOWN) + memo(Dir::DOWN, Dir::FWD);
-                        option_B = memo(from, Dir::DOWN) + memo(Dir::DOWN, Dir::RIGHT) + memo(Dir::RIGHT, Dir::FWD);
+                        option_A = memo(Dir::FWD, Dir::RIGHT) + memo(Dir::RIGHT, Dir::DOWN) + memo(Dir::DOWN, Dir::FWD);
+                        option_B = memo(Dir::FWD, Dir::DOWN) + memo(Dir::DOWN, Dir::RIGHT) + memo(Dir::RIGHT, Dir::FWD);
                         break;
                     }
                     case Dir::LEFT: { // v<A
-                        option_A = memo(from, Dir::DOWN) + memo(Dir::DOWN, Dir::LEFT) + memo(Dir::LEFT, Dir::FWD);
+                        option_A = memo(Dir::FWD, Dir::DOWN) + memo(Dir::DOWN, Dir::LEFT) + memo(Dir::LEFT, Dir::FWD);
                         option_B = option_A;
                         break;
                     }
                     case Dir::DOWN: { // vA
-                        option_A = memo(from, Dir::DOWN) + memo(Dir::DOWN, Dir::FWD);
+                        option_A = memo(Dir::FWD, Dir::DOWN) + memo(Dir::DOWN, Dir::FWD);
                         option_B = option_A;
                         break;
                     }
@@ -451,27 +451,27 @@ CLASS_DEF(DAY) {
             case Dir::RIGHT:
                 switch(to) {
                     case Dir::FWD: { // ^A
-                        option_A = memo(from, Dir::UP) + memo(Dir::UP, Dir::FWD);
+                        option_A = memo(Dir::FWD, Dir::UP) + memo(Dir::UP, Dir::FWD);
                         option_B = option_A;
                         break;
                     }
                     case Dir::UP: { // <^A   or   ^<A
-                        option_A = memo(from, Dir::LEFT) + memo(Dir::LEFT, Dir::UP) + memo(Dir::UP, Dir::FWD);
-                        option_B = memo(from, Dir::UP) + memo(Dir::UP, Dir::LEFT) + memo(Dir::LEFT, Dir::FWD);
+                        option_A = memo(Dir::FWD, Dir::LEFT) + memo(Dir::LEFT, Dir::UP) + memo(Dir::UP, Dir::FWD);
+                        option_B = memo(Dir::FWD, Dir::UP) + memo(Dir::UP, Dir::LEFT) + memo(Dir::LEFT, Dir::FWD);
                         break;
                     }
                     case Dir::RIGHT: { // A
-                        option_A = memo(from, Dir::FWD);
+                        option_A = memo(Dir::FWD, Dir::FWD);
                         option_B = option_A;
                         break;
                     }
                     case Dir::LEFT: { // <<A
-                        option_A = memo(from, Dir::LEFT) + memo(Dir::LEFT, Dir::LEFT) + memo(Dir::LEFT, Dir::FWD);
+                        option_A = memo(Dir::FWD, Dir::LEFT) + memo(Dir::LEFT, Dir::LEFT) + memo(Dir::LEFT, Dir::FWD);
                         option_B = option_A;
                         break;
                     }
                     case Dir::DOWN: { // <A
-                        option_A = memo(from, Dir::LEFT) + memo(Dir::LEFT, Dir::FWD);
+                        option_A = memo(Dir::FWD, Dir::LEFT) + memo(Dir::LEFT, Dir::FWD);
                         option_B = option_A;
                         break;
                     }
@@ -482,29 +482,27 @@ CLASS_DEF(DAY) {
             case Dir::LEFT:
                 switch(to) {
                     case Dir::FWD: { // >>^A
-                        option_A = memo(from, Dir::RIGHT) + memo(Dir::RIGHT, Dir::RIGHT) + memo(Dir::RIGHT, Dir::UP) + memo(Dir::UP, Dir::FWD);
-                        std::cout << "\t\tleft fwd reports " << option_A << "\n";
-                        std::cout << memo(from, Dir::RIGHT) << " + " << memo(Dir::RIGHT, Dir::RIGHT) << " + " << memo(Dir::RIGHT, Dir::UP) << memo(Dir::UP, Dir::FWD) << "\n";
+                        option_A = memo(Dir::FWD, Dir::RIGHT) + memo(Dir::RIGHT, Dir::RIGHT) + memo(Dir::RIGHT, Dir::UP) + memo(Dir::UP, Dir::FWD);
                         option_B = option_A;
                         break;
                     }
                     case Dir::UP: { // >^A
-                        option_A = memo(from, Dir::RIGHT) + memo(Dir::RIGHT, Dir::UP) + memo(Dir::UP, Dir::FWD);
+                        option_A = memo(Dir::FWD, Dir::RIGHT) + memo(Dir::RIGHT, Dir::UP) + memo(Dir::UP, Dir::FWD);
                         option_B = option_A;
                         break;
                     }
                     case Dir::RIGHT: { // >>A
-                        option_A = memo(from, Dir::RIGHT) + memo(Dir::RIGHT, Dir::RIGHT) + memo(Dir::UP, Dir::FWD);
+                        option_A = memo(Dir::FWD, Dir::RIGHT) + memo(Dir::RIGHT, Dir::RIGHT) + memo(Dir::UP, Dir::FWD);
                         option_B = option_A;
                         break;
                     }
                     case Dir::LEFT: { // A
-                        option_A = memo(from, Dir::FWD);
+                        option_A = memo(Dir::FWD, Dir::FWD);
                         option_B = option_A;
                         break;
                     }
                     case Dir::DOWN: { // >A
-                        option_A = memo(from, Dir::RIGHT) + memo(Dir::UP, Dir::FWD);
+                        option_A = memo(Dir::FWD, Dir::RIGHT) + memo(Dir::UP, Dir::FWD);
                         option_B = option_A;
                         break;
                     }
@@ -515,27 +513,27 @@ CLASS_DEF(DAY) {
             case Dir::DOWN:
                 switch(to) {
                     case Dir::FWD: { // >^A  or  ^>A
-                        option_A = memo(from, Dir::RIGHT) + memo(Dir::RIGHT, Dir::UP) + memo(Dir::UP, Dir::FWD);
-                        option_B = memo(from, Dir::UP) + memo(Dir::UP, Dir::RIGHT) + memo(Dir::RIGHT, Dir::FWD);
+                        option_A = memo(Dir::FWD, Dir::RIGHT) + memo(Dir::RIGHT, Dir::UP) + memo(Dir::UP, Dir::FWD);
+                        option_B = memo(Dir::FWD, Dir::UP) + memo(Dir::UP, Dir::RIGHT) + memo(Dir::RIGHT, Dir::FWD);
                         break;
                     }
                     case Dir::UP: { // ^A
-                        option_A = memo(from, Dir::UP) + memo(Dir::UP, Dir::FWD);
+                        option_A = memo(Dir::FWD, Dir::UP) + memo(Dir::UP, Dir::FWD);
                         option_B = option_A;
                         break;
                     }
                     case Dir::RIGHT: { // >A
-                        option_A = memo(from, Dir::RIGHT) + memo(Dir::RIGHT, Dir::FWD);
+                        option_A = memo(Dir::FWD, Dir::RIGHT) + memo(Dir::RIGHT, Dir::FWD);
                         option_B = option_A;
                         break;
                     }
                     case Dir::LEFT: { // <A
-                        option_A = memo(from, Dir::LEFT) + memo(Dir::LEFT, Dir::FWD);
+                        option_A = memo(Dir::FWD, Dir::LEFT) + memo(Dir::LEFT, Dir::FWD);
                         option_B = option_A;
                         break;
                     }
                     case Dir::DOWN: { // A
-                        option_A = memo(from, Dir::FWD);
+                        option_A = memo(Dir::FWD, Dir::FWD);
                         option_B = option_A;
                         break;
                     }
@@ -549,7 +547,6 @@ CLASS_DEF(DAY) {
         if (option_A < 0 || option_B < 0) throw std::logic_error("A or B was not initialized in the monster switch");
 
         int64_t best = std::min(option_A, option_B);
-        std::cout << "\tend dig: " << best << "\n";
 
         cache[rem_depth-1][from][to] = best;
 
@@ -581,11 +578,11 @@ CLASS_DEF(DAY) {
             int64_t this_one = code_len * code.numeric_value();
 
             // DP test
-            std::array<std::unordered_map<Dir, std::unordered_map<Dir, int64_t>>, 2> cache {};
+            std::array<std::unordered_map<Dir, std::unordered_map<Dir, int64_t>>, 1> cache {};
             Dir dp_current = Dir::FWD;
             int64_t answer = 0;
             for (auto& d : dp_test) {
-                answer = memo_find_count(dp_current, d, cache, 2);
+                answer += memo_find_count(dp_current, d, cache, 1);
                 dp_current = d;
             }
 
@@ -603,12 +600,18 @@ CLASS_DEF(DAY) {
         std::cout << "P2P2P2P2\n";
         constexpr int DEPTH = 1;
         std::array<std::unordered_map<Dir, std::unordered_map<Dir, int64_t>>, DEPTH> cache;
-        std::vector<Dir> code = { Dir::LEFT, Dir::FWD };
+        std::vector<Dir> code;
+        move_keypad('A','0', code);
+        move_keypad('0','2', code);
+        move_keypad('2','9', code);
+        move_keypad('9','A', code);
+
+        for (auto& c : code) std::cout << static_cast<char>(c); std::cout << "\n";
         // '0' (left, A)
         // <A               2
         // v<<A  >>^A       4 and 4    (correct when called with 0 depth)
         // v<A<AA>>^A   vAA<^A>A        10 and 8
-        //              computer says >>A, A, <^A, >A (9)
+        // v<A<A>>^Av<<A>>^AAvAA<^A>A    v<A>^AAv<<A>^A>AvA^A
 
         int64_t total = 0;
         auto current = Dir::FWD;
@@ -619,6 +622,16 @@ CLASS_DEF(DAY) {
             current = n;
         }
         std::cout << "total: " << total << "\n";
+
+        std::cout << "BF compare:\n";
+        std::vector<Dir> BF_next;
+        std::vector<Dir> BF_current = code;
+        for (int i = 0; i < DEPTH + 1; ++i) {
+            generate_step(BF_current, BF_next);
+            BF_current = std::move(BF_next);
+            BF_next.clear(); // i dont think this is necessary? im not sure about move semantics and husk objects anymore.
+        }
+        std::cout << BF_current.size() << "\n";
 
         reportSolution(complexity);
     }
