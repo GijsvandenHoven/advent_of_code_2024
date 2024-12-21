@@ -274,21 +274,48 @@ CLASS_DEF(DAY) {
         int crow = srow;
         int ccol = scol;
 
-        while (ccol < ecol) { // highest prio: go right (gap)
-            out.emplace_back(Dir::RIGHT);
-            ccol++;
-        }
-        while (crow > erow) { // second: go down (gap)
-            out.emplace_back(Dir::DOWN);
-            crow--;
-        }
-        while (ccol > ecol) { // third: go left
-            out.emplace_back(Dir::LEFT);
-            ccol--;
-        }
-        while (crow < erow) { // last: up
-            out.emplace_back(Dir::UP);
-            crow++;
+        /*
+        prefer consecutive over alternating
+
+        left before down
+        left before up
+        down before right
+        */
+
+        if ((srow == 1 && ecol == 0) || (scol == 0 && erow == 1)) {
+            while (ccol < ecol) { // highest prio: go right (gap)
+                out.emplace_back(Dir::RIGHT);
+                ccol++;
+            }
+            while (crow > erow) { // second: go down (gap)
+                out.emplace_back(Dir::DOWN);
+                crow--;
+            }
+            while (ccol > ecol) { // third: go left
+                out.emplace_back(Dir::LEFT);
+                ccol--;
+            }
+            while (crow < erow) { // last: up
+                out.emplace_back(Dir::UP);
+                crow++;
+            }
+        } else {
+            while (ccol > ecol) { // left before down
+                out.emplace_back(Dir::LEFT);
+                ccol--;
+            }
+            while (crow > erow) { // down before right
+                out.emplace_back(Dir::DOWN);
+                crow--;
+            }
+            while (crow < erow) { // beware, up and right are not actually ordered like this for depth 3 or depth 5.
+                out.emplace_back(Dir::UP);
+                crow++;
+            }
+            while (ccol < ecol) { // lowest prio
+                out.emplace_back(Dir::RIGHT);
+                ccol++;
+            }
         }
 
         out.emplace_back(Dir::FWD);
@@ -303,8 +330,6 @@ CLASS_DEF(DAY) {
     }
 
     static int64_t memo_find_count(Dir from, Dir to, auto& cache, int rem_depth) {
-        // std::cout << "\ttry f: " << static_cast<char>(from) << " - " << static_cast<char>(to) << "\n";
-
         if (rem_depth == 0) { // just give a straight answer
             switch (from) {
                 case Dir::FWD:
@@ -366,8 +391,6 @@ CLASS_DEF(DAY) {
             }
         }
 
-        // std::cout << "\tdig f: " << static_cast<char>(from) << " - " << static_cast<char>(to) << "\n";
-
         auto memo = [&cache, rem_depth](Dir f, Dir t){ return memo_find_count(f, t, cache, rem_depth- 1); };
 
         // we don't know, so brute force it. Don't even try the heuristic stuff on keypads, too risky. Just call functions like crazy.
@@ -376,7 +399,7 @@ CLASS_DEF(DAY) {
             case Dir::FWD:
                 switch (to) {
                     case Dir::FWD: { // A
-                        option_A = memo(Dir::FWD, to);
+                        option_A = memo(Dir::FWD, Dir::FWD);
                         option_B = option_A;
                         break;
                     }
@@ -398,7 +421,7 @@ CLASS_DEF(DAY) {
                         option_A =
                             memo(Dir::FWD, Dir::DOWN) +
                                 memo(Dir::DOWN, Dir::LEFT) +
-                                    memo(Dir::LEFT, Dir::LEFT) + // 1.
+                                    memo(Dir::LEFT, Dir::LEFT) +
                                         memo(Dir::LEFT, Dir::FWD);
                         option_B = option_A;
                         break;
@@ -565,7 +588,6 @@ CLASS_DEF(DAY) {
                 current_char = c;
             }
 
-            std::vector dp_test = final_seq; // todo remove this
             std::vector<Dir> current = std::move(final_seq);
             std::vector<Dir> next;
             for (int i = 0; i < 2; ++i) {
@@ -577,17 +599,6 @@ CLASS_DEF(DAY) {
             auto code_len = static_cast<int64_t>(current.size());
             int64_t this_one = code_len * code.numeric_value();
 
-            // DP test
-            std::array<std::unordered_map<Dir, std::unordered_map<Dir, int64_t>>, 1> cache {};
-            Dir dp_current = Dir::FWD;
-            int64_t answer = 0;
-            for (auto& d : dp_test) {
-                answer += memo_find_count(dp_current, d, cache, 1);
-                dp_current = d;
-            }
-
-            std::cout << "cmp brute force: " << code_len << " to dp answer: " << answer << "\n";
-
             complexity += this_one;
         }
 
@@ -597,58 +608,108 @@ CLASS_DEF(DAY) {
     void v2() const override {
         constexpr int DEPTH = 24;
         int64_t grand_total = 0;
-        std::array<std::unordered_map<Dir, std::unordered_map<Dir, int64_t>>, DEPTH> cache;
-        for (auto& code : codes) {
-            std::vector<Dir> keypad_seq; // this is the directional pad input to drive the numeric pad
+        // std::array<std::unordered_map<Dir, std::unordered_map<Dir, int64_t>>, DEPTH> cache {};
+        //
+        // for (auto& code : codes) {
+        //     std::vector<Dir> keypad_seq; // this is the directional pad input to drive the numeric pad
+        //
+        //     // keypad to first bot
+        //     auto current_char = 'A';
+        //     for (auto c : code.code) {
+        //         move_keypad(current_char, c, keypad_seq);
+        //         current_char = c;
+        //     }
+        //
+        //     for (auto& c : keypad_seq) std::cout << static_cast<char>(c); std::cout << "\n";
+        //
+        //     int64_t total = 0;
+        //     auto current = Dir::FWD;
+        //     for (auto& n : keypad_seq) {
+        //         auto this_r = memo_find_count(current, n, cache, DEPTH);
+        //         // std::cout << "completed " << static_cast<char>(current) << " - " << static_cast<char>(n) << ": " << this_r << "\n";
+        //         total += this_r;
+        //         current = n;
+        //     }
+        //     grand_total += (total * code.numeric_value());
+        // }
 
-            // keypad to first bot
-            auto current_char = 'A';
-            for (auto c : code.code) {
-                move_keypad(current_char, c, keypad_seq);
-                current_char = c;
+        test();
+
+        reportSolution(grand_total);
+    }
+
+    void test() const { // brute force and DP compare at depths.
+        constexpr int DEPTH = 2;
+        std::array<std::unordered_map<Dir, std::unordered_map<Dir, int64_t>>, DEPTH> cache {};
+
+        std::vector<Dir> first = { Dir::DOWN, Dir::FWD };
+        // vA
+        // <vA                                  ^>A        // todo: try also >^A
+        // v<<A             >A      >^A         <A           v>A            ^A  (bf layer says 16, OK)
+        // <vA <A A >>^A    vA ^A   vA <^A >A   v<<A >>^A    <vA >A ^A      <A >A (bf layer says 40, OK)
+
+
+        int64_t bf_report;
+        int64_t dp_report;
+        {
+            std::vector<Dir> current = first;
+            std::vector<Dir> next;
+            for (int i = 0; i < DEPTH + 1; ++i) {
+                generate_step(current, next);
+                current = std::move(next);
+                std::cout << "\tBF layer says " << current.size() << "\n";
+                next.clear(); // i dont think this is necessary? im not sure about move semantics and husk objects anymore.
             }
 
-            for (auto& c : keypad_seq) std::cout << static_cast<char>(c); std::cout << "\n";
+            std::cout << "Depth " << DEPTH << " BF says " << current.size() << "\n";
 
+            bf_report = static_cast<int64_t>(current.size());
+        }
+
+        std::cout << "memo gen\n";
+        {
             int64_t total = 0;
             auto current = Dir::FWD;
-            for (auto& n : keypad_seq) {
+            for (auto& n : first) {
                 auto this_r = memo_find_count(current, n, cache, DEPTH);
                 // std::cout << "completed " << static_cast<char>(current) << " - " << static_cast<char>(n) << ": " << this_r << "\n";
                 total += this_r;
                 current = n;
             }
-            std::cout << "total: " << total << "\n";
-            grand_total += (total * code.numeric_value());
+            std::cout << "\n";
+
+            std::cout << "Depth " << DEPTH << " DP says " << total << "\n";
+            dp_report = total;
         }
 
-        // '0' (left, A)
-        // <A               2
-        // v<<A  >>^A       4 and 4    (correct when called with 0 depth)
-        // v<A<AA>>^A   vAA<^A>A        10 and 8
-        // v<A<A>>^Av<<A>>^AAvAA<^A>A    v<A>^AAv<<A>^A>AvA^A
+        if (dp_report == bf_report) {
+            std::cout << "OK\n"; return;
+        }
 
-        // int64_t total = 0;
-        // auto current = Dir::FWD;
-        // for (auto& n : code) {
-        //     auto this_r = memo_find_count(current, n, cache, DEPTH);
-        //     std::cout << "completed " << static_cast<char>(current) << " - " << static_cast<char>(n) << ": " << this_r << "\n";
-        //     total += this_r;
-        //     current = n;
+        // get the breaking string by going less deep in BF.
+        // {
+        //     std::vector<Dir> current = first;
+        //     std::vector<Dir> next;
+        //     for (int i = 0; i < DEPTH - 3; ++i) {
+        //         generate_step(current, next);
+        //         current = std::move(next);
+        //         std::cout << "\tBF layer says " << current.size() << "\n";
+        //         next.clear(); // i dont think this is necessary? im not sure about move semantics and husk objects anymore.
+        //     }
+        //
+        //     std::cout << "this breaks: ("<< current.size() <<")\n";
+        //     for (auto& d : current) std::cout << static_cast<char>(d); std::cout << "\n";
+        //     std::cout << "BF claimed " << bf_report << ", but if we feed this exact vec to DP to do layers, it says:\n";
+        //
+        //     int64_t total = 0;
+        //     auto dp_current = Dir::FWD;
+        //     for (auto& n : current) {
+        //         auto this_r = memo_find_count(dp_current, n, cache, 3);
+        //         total += this_r;
+        //         dp_current = n;
+        //     }
+        //     std::cout << "DP says " << total << "\n";
         // }
-        // std::cout << "total: " << total << "\n";
-
-        // std::cout << "BF compare:\n";
-        // std::vector<Dir> BF_next;
-        // std::vector<Dir> BF_current = code;
-        // for (int i = 0; i < DEPTH + 1; ++i) {
-        //     generate_step(BF_current, BF_next);
-        //     BF_current = std::move(BF_next);
-        //     BF_next.clear(); // i dont think this is necessary? im not sure about move semantics and husk objects anymore.
-        // }
-        // std::cout << BF_current.size() << "\n";
-
-        reportSolution(grand_total);
     }
 
     // this is too low:
@@ -658,7 +719,7 @@ CLASS_DEF(DAY) {
     // 304299852534422
 
     void parseBenchReset() override {
-
+        codes.clear();
     }
 
     private:
