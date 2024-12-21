@@ -50,7 +50,7 @@ struct Code {
     +---+---+---+
  */
 
-enum class Dir {
+enum class Dir : uint8_t {
     UP = '^',
     DOWN = 'v',
     LEFT = '<',
@@ -208,11 +208,11 @@ CLASS_DEF(DAY) {
                 out.emplace_back(Dir::DOWN);
                 crow++;
             }
-            while (crow > erow) { // neutral placement between right and up...
+            while (crow > erow) { // up is actually better than right unless there are 3 or 5 steps. But fortunately, the problem is 2 or 20!
                 out.emplace_back(Dir::UP);
                 crow--;
             }
-            while (ccol < ecol) { // neutral placement between right and up...
+            while (ccol < ecol) { // lowest pref.
                 out.emplace_back(Dir::RIGHT);
                 ccol++;
             }
@@ -302,6 +302,260 @@ CLASS_DEF(DAY) {
         }
     }
 
+    static int64_t memo_find_count(Dir from, Dir to, auto& cache, int rem_depth) {
+        std::cout << "\ttry f: " << static_cast<char>(from) << " - " << static_cast<char>(to) << "\n";
+
+        if (rem_depth == 0) { // just give a straight answer
+            switch (from) {
+                case Dir::FWD:
+                    switch (to) {
+                        case Dir::FWD: return 1; // A
+                        case Dir::UP: return 2; // <A
+                        case Dir::RIGHT: return 2; //vA
+                        case Dir::DOWN: return 3; // v<A
+                        case Dir::LEFT: return 4; //v<<A
+                        default: throw std::logic_error("No!");
+                    }
+                case Dir::UP:
+                    switch (to) {
+                        case Dir::FWD: return 2; // >A
+                        case Dir::UP: return 1; // A
+                        case Dir::RIGHT: return 3; //v>A
+                        case Dir::DOWN: return 2; // vA
+                        case Dir::LEFT: return 3; //v<A
+                        default: throw std::logic_error("No!");
+                    }
+                case Dir::RIGHT:
+                    switch (to) {
+                        case Dir::FWD: return 2; // ^A
+                        case Dir::UP: return 3; // <^A
+                        case Dir::RIGHT: return 1; //A
+                        case Dir::DOWN: return 3; // v<A
+                        case Dir::LEFT: return 3; //<<A
+                        default: throw std::logic_error("No!");
+                    }
+                case Dir::DOWN:
+                    switch (to) {
+                        case Dir::FWD: return 3; // >^A
+                        case Dir::UP: return 2; // ^A
+                        case Dir::RIGHT: return 2; // >A
+                        case Dir::DOWN: return 1; // A
+                        case Dir::LEFT: return 2; // <A
+                        default: throw std::logic_error("No!");
+                    }
+                case Dir::LEFT:
+                    switch (to) {
+                        case Dir::FWD: return 4; // >>^A
+                        case Dir::UP: return 3; // >^A
+                        case Dir::RIGHT: return 3; // >>A
+                        case Dir::DOWN: return 2; // >A
+                        case Dir::LEFT: return 1; // A
+                        default: throw std::logic_error("No!");
+                    }
+                default: throw std::logic_error("No!");
+            }
+
+        }
+
+        auto& cache_map_from = cache[rem_depth - 1]; // depth 1 remaining is row 0, depth 2 is row 1, etc...
+        auto iter = cache_map_from.find(from); // on this layer, this direction is known to take ... ?
+        if (iter != cache_map_from.end()) { // we know something about this starting pos at this depth...
+            auto inner_iter = iter->second.find(to);
+            if (inner_iter != iter->second.end()) { // namely we know how much it will take to get here!
+                return inner_iter->second;
+            }
+        }
+
+        std::cout << "\tdig f: " << static_cast<char>(from) << " - " << static_cast<char>(to) << "\n";
+
+        auto memo = [&cache, rem_depth](Dir f, Dir t){ return memo_find_count(f, t, cache, rem_depth- 1); };
+
+        // we don't know, so brute force it. Don't even try the heuristic stuff on keypads, too risky. Just call functions like crazy.
+        int64_t option_A = -1, option_B = -1;
+        switch (from) {
+            case Dir::FWD:
+                switch (to) {
+                    case Dir::FWD: { // A
+                        option_A = memo(from, to);
+                        option_B = option_A;
+                        break;
+                    }
+                    case Dir::UP: { // <A
+                        option_A =
+                            memo(from, Dir::LEFT) +
+                                memo(Dir::LEFT, Dir::FWD);
+                        option_B = option_A;
+                        break;
+                    }
+                    case Dir::RIGHT: { // vA
+                        option_A =
+                            memo(from, Dir::DOWN) +
+                                memo(Dir::DOWN, Dir::FWD);
+                        option_B = option_A;
+                        break;
+                    }
+                    case Dir::LEFT: { // v<<A, we are certain there is no need for <v<A, we prefer consecutive, this heuristic remains.
+                        option_A =
+                            memo(from, Dir::DOWN) +
+                                memo(Dir::DOWN, Dir::LEFT) +
+                                    memo(Dir::LEFT, Dir::LEFT) + // 1.
+                                        memo(Dir::LEFT, Dir::FWD);
+                        option_B = option_A;
+                        break;
+                    }
+                    case Dir::DOWN: { // multiplle choices! <vA  or  v<A
+                        option_A = memo(from, Dir::LEFT) +
+                            memo(Dir::LEFT, Dir::DOWN) +
+                                memo(Dir::DOWN, Dir::FWD);
+
+                        option_B = memo(from, Dir::DOWN) +
+                            memo(Dir::DOWN, Dir::LEFT) +
+                                memo(Dir::LEFT, Dir::FWD);
+                        break;
+                    }
+                    default: throw std::logic_error("No!");
+                }
+            break;
+            case Dir::UP:
+                switch(to) {
+                    case Dir::FWD: {
+                        // >A
+                        option_A = memo(from, Dir::RIGHT) + memo(Dir::RIGHT, Dir::FWD);
+                        option_B = option_A;
+                        break;
+                    }
+                    case Dir::UP: { // A
+                        option_A = memo(from, Dir::FWD);
+                        option_B = option_A;
+                        break;
+                    }
+                    case Dir::RIGHT: { // choice! >vA  or v>A
+                        option_A = memo(from, Dir::RIGHT) + memo(Dir::RIGHT, Dir::DOWN) + memo(Dir::DOWN, Dir::FWD);
+                        option_B = memo(from, Dir::DOWN) + memo(Dir::DOWN, Dir::RIGHT) + memo(Dir::RIGHT, Dir::FWD);
+                        break;
+                    }
+                    case Dir::LEFT: { // v<A
+                        option_A = memo(from, Dir::DOWN) + memo(Dir::DOWN, Dir::LEFT) + memo(Dir::LEFT, Dir::FWD);
+                        option_B = option_A;
+                        break;
+                    }
+                    case Dir::DOWN: { // vA
+                        option_A = memo(from, Dir::DOWN) + memo(Dir::DOWN, Dir::FWD);
+                        option_B = option_A;
+                        break;
+                    }
+                    default:
+                        throw std::logic_error("No!");
+                }
+            break;
+            case Dir::RIGHT:
+                switch(to) {
+                    case Dir::FWD: { // ^A
+                        option_A = memo(from, Dir::UP) + memo(Dir::UP, Dir::FWD);
+                        option_B = option_A;
+                        break;
+                    }
+                    case Dir::UP: { // <^A   or   ^<A
+                        option_A = memo(from, Dir::LEFT) + memo(Dir::LEFT, Dir::UP) + memo(Dir::UP, Dir::FWD);
+                        option_B = memo(from, Dir::UP) + memo(Dir::UP, Dir::LEFT) + memo(Dir::LEFT, Dir::FWD);
+                        break;
+                    }
+                    case Dir::RIGHT: { // A
+                        option_A = memo(from, Dir::FWD);
+                        option_B = option_A;
+                        break;
+                    }
+                    case Dir::LEFT: { // <<A
+                        option_A = memo(from, Dir::LEFT) + memo(Dir::LEFT, Dir::LEFT) + memo(Dir::LEFT, Dir::FWD);
+                        option_B = option_A;
+                        break;
+                    }
+                    case Dir::DOWN: { // <A
+                        option_A = memo(from, Dir::LEFT) + memo(Dir::LEFT, Dir::FWD);
+                        option_B = option_A;
+                        break;
+                    }
+                    default:
+                        throw std::logic_error("No!");
+                }
+            break;
+            case Dir::LEFT:
+                switch(to) {
+                    case Dir::FWD: { // >>^A
+                        option_A = memo(from, Dir::RIGHT) + memo(Dir::RIGHT, Dir::RIGHT) + memo(Dir::RIGHT, Dir::UP) + memo(Dir::UP, Dir::FWD);
+                        std::cout << "\t\tleft fwd reports " << option_A << "\n";
+                        std::cout << memo(from, Dir::RIGHT) << " + " << memo(Dir::RIGHT, Dir::RIGHT) << " + " << memo(Dir::RIGHT, Dir::UP) << memo(Dir::UP, Dir::FWD) << "\n";
+                        option_B = option_A;
+                        break;
+                    }
+                    case Dir::UP: { // >^A
+                        option_A = memo(from, Dir::RIGHT) + memo(Dir::RIGHT, Dir::UP) + memo(Dir::UP, Dir::FWD);
+                        option_B = option_A;
+                        break;
+                    }
+                    case Dir::RIGHT: { // >>A
+                        option_A = memo(from, Dir::RIGHT) + memo(Dir::RIGHT, Dir::RIGHT) + memo(Dir::UP, Dir::FWD);
+                        option_B = option_A;
+                        break;
+                    }
+                    case Dir::LEFT: { // A
+                        option_A = memo(from, Dir::FWD);
+                        option_B = option_A;
+                        break;
+                    }
+                    case Dir::DOWN: { // >A
+                        option_A = memo(from, Dir::RIGHT) + memo(Dir::UP, Dir::FWD);
+                        option_B = option_A;
+                        break;
+                    }
+                    default:
+                        throw std::logic_error("No!");
+                }
+            break;
+            case Dir::DOWN:
+                switch(to) {
+                    case Dir::FWD: { // >^A  or  ^>A
+                        option_A = memo(from, Dir::RIGHT) + memo(Dir::RIGHT, Dir::UP) + memo(Dir::UP, Dir::FWD);
+                        option_B = memo(from, Dir::UP) + memo(Dir::UP, Dir::RIGHT) + memo(Dir::RIGHT, Dir::FWD);
+                        break;
+                    }
+                    case Dir::UP: { // ^A
+                        option_A = memo(from, Dir::UP) + memo(Dir::UP, Dir::FWD);
+                        option_B = option_A;
+                        break;
+                    }
+                    case Dir::RIGHT: { // >A
+                        option_A = memo(from, Dir::RIGHT) + memo(Dir::RIGHT, Dir::FWD);
+                        option_B = option_A;
+                        break;
+                    }
+                    case Dir::LEFT: { // <A
+                        option_A = memo(from, Dir::LEFT) + memo(Dir::LEFT, Dir::FWD);
+                        option_B = option_A;
+                        break;
+                    }
+                    case Dir::DOWN: { // A
+                        option_A = memo(from, Dir::FWD);
+                        option_B = option_A;
+                        break;
+                    }
+                    default:
+                        throw std::logic_error("No!");
+                }
+            break;
+            default: throw std::logic_error("No!");
+        }
+
+        if (option_A < 0 || option_B < 0) throw std::logic_error("A or B was not initialized in the monster switch");
+
+        int64_t best = std::min(option_A, option_B);
+        std::cout << "\tend dig: " << best << "\n";
+
+        cache[rem_depth-1][from][to] = best;
+
+        return best;
+    }
+
     void v1() const override {
         int64_t complexity = 0;
         for (auto& code : codes) {
@@ -314,6 +568,7 @@ CLASS_DEF(DAY) {
                 current_char = c;
             }
 
+            std::vector dp_test = final_seq; // todo remove this
             std::vector<Dir> current = std::move(final_seq);
             std::vector<Dir> next;
             for (int i = 0; i < 2; ++i) {
@@ -322,17 +577,50 @@ CLASS_DEF(DAY) {
                 next.clear(); // i dont think this is necessary? im not sure about move semantics and husk objects anymore.
             }
 
-            int64_t this_one = (static_cast<int64_t>(current.size()) * code.numeric_value());
+            auto code_len = static_cast<int64_t>(current.size());
+            int64_t this_one = code_len * code.numeric_value();
+
+            // DP test
+            std::array<std::unordered_map<Dir, std::unordered_map<Dir, int64_t>>, 2> cache {};
+            Dir dp_current = Dir::FWD;
+            int64_t answer = 0;
+            for (auto& d : dp_test) {
+                answer = memo_find_count(dp_current, d, cache, 2);
+                dp_current = d;
+            }
+
+            std::cout << "cmp brute force: " << code_len << " to dp answer: " << answer << "\n";
+
             complexity += this_one;
         }
 
         reportSolution(complexity);
     }
 
-    void v2() const override {
+    void v2() const override { // todo: proven OOM problem, you cannot do this. There must be a numeric solution.
+        int64_t complexity = 0;
 
+        std::cout << "P2P2P2P2\n";
+        constexpr int DEPTH = 1;
+        std::array<std::unordered_map<Dir, std::unordered_map<Dir, int64_t>>, DEPTH> cache;
+        std::vector<Dir> code = { Dir::LEFT, Dir::FWD };
+        // '0' (left, A)
+        // <A               2
+        // v<<A  >>^A       4 and 4    (correct when called with 0 depth)
+        // v<A<AA>>^A   vAA<^A>A        10 and 8
+        //              computer says >>A, A, <^A, >A (9)
 
-        reportSolution(0);
+        int64_t total = 0;
+        auto current = Dir::FWD;
+        for (auto& n : code) {
+            auto this_r = memo_find_count(current, n, cache, DEPTH);
+            std::cout << "completed " << static_cast<char>(current) << " - " << static_cast<char>(n) << ": " << this_r << "\n";
+            total += this_r;
+            current = n;
+        }
+        std::cout << "total: " << total << "\n";
+
+        reportSolution(complexity);
     }
 
     void parseBenchReset() override {

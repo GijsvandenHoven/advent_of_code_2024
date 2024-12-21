@@ -76,3 +76,31 @@ down before right
     +---+---+---+
     | < | v | > |
     +---+---+---+
+
+
+-- PART TWO --
+recall this neutral option.
+// from 2 to 6
+// >^A    or    ^>A
+// vA<^A>A  or  <Av>A^A
+// v<A>^AV<<A>^A>AvA^A   or
+// v<<A>>^Av<A>A^A<A>A
+
+// v<A<A>>^AvA<^A>Av<A<AA>>^AvA<^A>AvA^Av<A>^A<A>A
+// v<A<AA>>^AvAA<^A>Av<A<A>>^AvA^A<A>Av<<A>>^AvAvA
+
+with more layers, does the option remain neutral?
+seems to be the case.
+
+// brute forcing in code shows up is better than right unless 3 or 5 steps (tried up to 21)
+
+// <AA
+// v<<A>>^AA
+// down, left, left, a, right, right, <^A>AA
+
+// >>
+// vAA
+// v<A>^AA
+
+// <^A
+//
