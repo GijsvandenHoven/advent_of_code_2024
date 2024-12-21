@@ -294,183 +294,42 @@ CLASS_DEF(DAY) {
         out.emplace_back(Dir::FWD);
     }
 
+    static void generate_step(const std::vector<Dir>& from, std::vector<Dir>& to) {
+        auto current_dir = Dir::FWD;
+        for (auto d : from) {
+            move_directional(current_dir, d, to);
+            current_dir = d;
+        }
+    }
+
     void v1() const override {
         int64_t complexity = 0;
         for (auto& code : codes) {
             std::vector<Dir> final_seq; // this is the directional pad input to drive the numeric pad
 
+            // keypad to first bot
             auto current_char = 'A';
             for (auto c : code.code) {
                 move_keypad(current_char, c, final_seq);
                 current_char = c;
             }
 
-            for (auto& d : final_seq) {
-                std::cout << static_cast<char>(d);
-            }
-            std::cout << "\n";
-
-            std::vector<Dir> second; // this is input to dir pad 2, drives dir pad 1.
-            auto current_dir = Dir::FWD;
-            for (auto d : final_seq) {
-                move_directional(current_dir, d, second);
-                current_dir = d;
+            std::vector<Dir> current = std::move(final_seq);
+            std::vector<Dir> next;
+            for (int i = 0; i < 2; ++i) {
+                generate_step(current, next);
+                current = std::move(next);
+                next.clear(); // i dont think this is necessary? im not sure about move semantics and husk objects anymore.
             }
 
-            for (auto& d : second) {
-                std::cout << static_cast<char>(d);
-            }
-            std::cout << "\n";
-
-            std::vector<Dir> third; // this is input to the 3rd dir pad, we are controlling this.
-            current_dir = Dir::FWD;
-            for (auto d : second) {
-                move_directional(current_dir, d, third);
-                current_dir = d;
-            }
-
-            for (auto& d : third) {
-                std::cout << static_cast<char>(d);
-            }
-            std::cout << "\n";
-
-            int64_t this_one = (static_cast<int64_t>(third.size()) * code.numeric_value());
-            std::cout << "code length " << third.size() << "\n";
-            std::cout << code.code[0] << code.code[1] << code.code[2] << code.code[3] << ": " << this_one << "\n";
+            int64_t this_one = (static_cast<int64_t>(current.size()) * code.numeric_value());
             complexity += this_one;
         }
-
-        // std::vector<Dir> fourth;
-        // current_dir = Dir::FWD;
-        // for (auto d : third) {
-        //     move_directional(current_dir, d, fourth);
-        //     current_dir = d;
-        // }
-        //
-        // for (auto& d : fourth) {
-        //     std::cout << static_cast<char>(d);
-        // }
-        // std::cout << "\n";
 
         reportSolution(complexity);
     }
 
     void v2() const override {
-        // problem statement:
-
-        // <AAv<AA>>^A
-        // and
-        // v<<AA>^AA>A
-
-        // are both equivalent to '37'
-        // namely, they follow from
-        // ^^<<A
-        // or
-        // <<^^A
-        // but as demonstrated below, one has a shorter sequence to execute.
-        // why?
-
-        // auto _ = [](char c) { return static_cast<Dir>(c); };
-        // {
-        //     std::vector myInput = {
-        //         _('<'),
-        //         _('A'),
-        //         _('A'),
-        //         _('v'),
-        //         _('<'),
-        //         _('A'),
-        //         _('A'),
-        //         _('>'),
-        //         _('>'),
-        //         _('^'),
-        //         _('A'),
-        //     };
-        //
-        //     std::vector alternative = {
-        //         _('v'),
-        //         _('<'),
-        //         _('<'),
-        //         _('A'),
-        //         _('A'),
-        //         _('>'),
-        //         _('^'),
-        //         _('A'),
-        //         _('A'),
-        //         _('>'),
-        //         _('A'),
-        //     };
-        //
-        //     assert(myInput.size() == alternative.size());
-        //
-        //     std::cout << "\n\n\n\n\n\n";
-        //     std::vector<Dir> thing;
-        //     auto current = Dir::FWD;
-        //     for (auto& d : myInput) {
-        //         move_directional(current, d, thing);
-        //         current = d;
-        //     }
-        //
-        //     std::cout << "generated input sequence:\n";
-        //     for (auto& c : thing) {
-        //         std::cout << static_cast<char>(c);
-        //     }
-        //     std::cout << "\n";
-        //     thing.clear();
-        //     current = Dir::FWD;
-        //     for (auto& d : alternative) {
-        //         move_directional(current, d, thing);
-        //         current = d;
-        //     }
-        //     std::cout << "alternative input sequence:\n";
-        //     for (auto& c : thing) {
-        //         std::cout << static_cast<char>(c);
-        //     }
-        //     std::cout << "\n";
-        //
-        //     std::cout << "\n";
-        // }
-        //
-        // // verification of <<^^A and ^^<<A
-        // {
-        //     std::vector myInput = {
-        //         _('^'),
-        //         _('^'),
-        //         _('<'),
-        //         _('<'),
-        //         _('A'),
-        //     };
-        //     std::vector alternative = {
-        //         _('<'),
-        //         _('<'),
-        //         _('^'),
-        //         _('^'),
-        //         _('A'),
-        //     };
-        //
-        //     std::vector<Dir> thing;
-        //     auto current = Dir::FWD;
-        //     for (auto& d : myInput) {
-        //         move_directional(current, d, thing);
-        //         current = d;
-        //     }
-        //
-        //     std::cout << "generated input sequence:\n";
-        //     for (auto& c : thing) {
-        //         std::cout << static_cast<char>(c);
-        //     }
-        //     std::cout << "\n";
-        //     thing.clear();
-        //     current = Dir::FWD;
-        //     for (auto& d : alternative) {
-        //         move_directional(current, d, thing);
-        //         current = d;
-        //     }
-        //     std::cout << "alternative input sequence:\n";
-        //     for (auto& c : thing) {
-        //         std::cout << static_cast<char>(c);
-        //     }
-        //     std::cout << "\n";
-        // }
 
 
         reportSolution(0);
