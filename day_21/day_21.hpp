@@ -594,47 +594,68 @@ CLASS_DEF(DAY) {
         reportSolution(complexity);
     }
 
-    void v2() const override { // todo: proven OOM problem, you cannot do this. There must be a numeric solution.
-        int64_t complexity = 0;
-
-        std::cout << "P2P2P2P2\n";
-        constexpr int DEPTH = 1;
+    void v2() const override {
+        constexpr int DEPTH = 24;
+        int64_t grand_total = 0;
         std::array<std::unordered_map<Dir, std::unordered_map<Dir, int64_t>>, DEPTH> cache;
-        std::vector<Dir> code;
-        move_keypad('A','0', code);
-        move_keypad('0','2', code);
-        move_keypad('2','9', code);
-        move_keypad('9','A', code);
+        for (auto& code : codes) {
+            std::vector<Dir> keypad_seq; // this is the directional pad input to drive the numeric pad
 
-        for (auto& c : code) std::cout << static_cast<char>(c); std::cout << "\n";
+            // keypad to first bot
+            auto current_char = 'A';
+            for (auto c : code.code) {
+                move_keypad(current_char, c, keypad_seq);
+                current_char = c;
+            }
+
+            for (auto& c : keypad_seq) std::cout << static_cast<char>(c); std::cout << "\n";
+
+            int64_t total = 0;
+            auto current = Dir::FWD;
+            for (auto& n : keypad_seq) {
+                auto this_r = memo_find_count(current, n, cache, DEPTH);
+                // std::cout << "completed " << static_cast<char>(current) << " - " << static_cast<char>(n) << ": " << this_r << "\n";
+                total += this_r;
+                current = n;
+            }
+            std::cout << "total: " << total << "\n";
+            grand_total += (total * code.numeric_value());
+        }
+
         // '0' (left, A)
         // <A               2
         // v<<A  >>^A       4 and 4    (correct when called with 0 depth)
         // v<A<AA>>^A   vAA<^A>A        10 and 8
         // v<A<A>>^Av<<A>>^AAvAA<^A>A    v<A>^AAv<<A>^A>AvA^A
 
-        int64_t total = 0;
-        auto current = Dir::FWD;
-        for (auto& n : code) {
-            auto this_r = memo_find_count(current, n, cache, DEPTH);
-            std::cout << "completed " << static_cast<char>(current) << " - " << static_cast<char>(n) << ": " << this_r << "\n";
-            total += this_r;
-            current = n;
-        }
-        std::cout << "total: " << total << "\n";
+        // int64_t total = 0;
+        // auto current = Dir::FWD;
+        // for (auto& n : code) {
+        //     auto this_r = memo_find_count(current, n, cache, DEPTH);
+        //     std::cout << "completed " << static_cast<char>(current) << " - " << static_cast<char>(n) << ": " << this_r << "\n";
+        //     total += this_r;
+        //     current = n;
+        // }
+        // std::cout << "total: " << total << "\n";
 
-        std::cout << "BF compare:\n";
-        std::vector<Dir> BF_next;
-        std::vector<Dir> BF_current = code;
-        for (int i = 0; i < DEPTH + 1; ++i) {
-            generate_step(BF_current, BF_next);
-            BF_current = std::move(BF_next);
-            BF_next.clear(); // i dont think this is necessary? im not sure about move semantics and husk objects anymore.
-        }
-        std::cout << BF_current.size() << "\n";
+        // std::cout << "BF compare:\n";
+        // std::vector<Dir> BF_next;
+        // std::vector<Dir> BF_current = code;
+        // for (int i = 0; i < DEPTH + 1; ++i) {
+        //     generate_step(BF_current, BF_next);
+        //     BF_current = std::move(BF_next);
+        //     BF_next.clear(); // i dont think this is necessary? im not sure about move semantics and husk objects anymore.
+        // }
+        // std::cout << BF_current.size() << "\n";
 
-        reportSolution(complexity);
+        reportSolution(grand_total);
     }
+
+    // this is too low:
+    // 426647904252
+
+    // too low!
+    // 304299852534422
 
     void parseBenchReset() override {
 
