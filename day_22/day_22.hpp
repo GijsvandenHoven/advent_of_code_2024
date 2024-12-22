@@ -6,6 +6,7 @@
 #include "../util/macros.hpp"
 
 #include <omp.h>
+#include <syncstream>
 
 #define DAY 22
 
@@ -73,23 +74,23 @@ CLASS_DEF(DAY) {
         }
 
         auto value_of_sequence = [](const std::array<int8_t, 4>& seq, const std::array<PriceData, 2000>& list) {
-            int8_t value = 0; // although not finding is not exactly 0, for the purpose of this puzzle you can treat it as such.
             for (int i = 3; i < list.size(); ++i) {
                 if (list[i].delta != seq[3]) continue;
                 if (list[i-1].delta != seq[2]) continue;
                 if (list[i-2].delta != seq[1]) continue;
                 if (list[i-3].delta != seq[0]) continue;
 
-                value = std::max(value, list[i].price);
+                return static_cast<int>(list[i].price);
             }
 
-            return static_cast<int>(value);
+            return 0;
         };
 
         int best_value = 0;
+#pragma omp parallel for default(none) shared(std::cout, best_value, sequences, value_of_sequence)
         for (int8_t i = -9; i <= 9; ++i) {
+            // std::osyncstream(std::cout) << "Thread " << omp_get_thread_num() << " Working on " << static_cast<int>(i) << "\n";
             for (int8_t j = -9; j <= 9; ++j) {
-                std::cout << static_cast<int>(j) << "\n";
                 for (int8_t k = -9; k <= 9; ++k) {
                     for (int8_t l = -9; l <= 9; ++l) {
                         std::array<int8_t, 4> seq = {{ i,j,k,l }};
@@ -97,13 +98,15 @@ CLASS_DEF(DAY) {
                         for (const auto& s : sequences) {
                             total_value_of_seq += value_of_sequence(seq, s);
                         }
+#pragma omp critical
                         best_value = std::max(best_value, total_value_of_seq);
                     }
                 }
             }
         }
 
-
+        // 1755 is TOO HIGH
+        // 1727
         reportSolution(best_value);
     }
 
