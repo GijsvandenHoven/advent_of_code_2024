@@ -111,7 +111,7 @@ CLASS_DEF(DAY) {
     }
 
     void parseBenchReset() override {
-
+        initials.clear();
     }
 
     private:
