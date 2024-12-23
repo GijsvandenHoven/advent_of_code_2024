@@ -32,14 +32,6 @@ CLASS_DEF(DAY) {
             computers[self].connections.emplace(other);
             computers[other].connections.emplace(self);
         }
-
-        for (auto& [k, v] : computers) {
-            std::cout << k << ": ";
-            for (auto& c : v.connections) {
-                std::cout << c << ", ";
-            }
-            std::cout << "\n";
-        }
     }
 
     void get_triplets(const Computer& src, std::set<std::set<std::string>>& known) const {
@@ -51,7 +43,37 @@ CLASS_DEF(DAY) {
             for (auto& c2 : other.connections) {
                 std::set sorted { src.id, con, c2 };
                 if (src.connections.contains(c2) && ! known.contains(sorted)) {
-                    known.emplace(sorted);
+                    known.emplace(std::move(sorted));
+                }
+            }
+        }
+    }
+
+    void increase_k_group(const std::set<std::set<std::string>>& k_minus_one_group, std::set<std::set<std::string>>& k_group) const {
+        for (auto& group : k_minus_one_group) {
+            auto& someone = *group.begin();
+            auto& computer_in_group = computers.find(someone)->second; // arbitrarily chosen to be the first.
+            // If there exists a member in connections not in the group but contained by everyone, the k-1 group can be expanded to a k-group.
+            for (auto& con : computer_in_group.connections) {
+                if (group.contains(con)) continue; // it's already in the group.
+
+                // it is not in the group, does everyone also contain it?
+                bool everyone_has_it = true;
+                for (auto& member : group) {
+                    auto& other_pc = computers.find(member)->second;
+
+                    if (! other_pc.connections.contains(con)) {
+                        everyone_has_it = false;
+                        break;
+                    }
+                }
+
+                if (everyone_has_it) {
+                    auto copy = group; // very efficient hmm yes.
+                    copy.emplace(con);
+
+                    // emplacing it is fine even if duplicate, the chad std::set uses operator== to not double up. The contains check also does, so why bother?
+                    k_group.emplace(std::move(copy));
                 }
             }
         }
@@ -68,7 +90,34 @@ CLASS_DEF(DAY) {
     }
 
     void v2() const override {
-        reportSolution(0);
+        // get the 't' - triplets
+        std::set<std::set<std::string>> lex_sorted_triplets;
+        for (auto& [key, value] : computers) {
+            get_triplets(value, lex_sorted_triplets);
+        }
+
+        auto k_minus_one_group = std::move(lex_sorted_triplets);
+        while (true ) {
+            std::set<std::set<std::string>> next;
+            increase_k_group(k_minus_one_group, next);
+
+            if (! next.empty()) {
+                k_minus_one_group = std::move(next);
+            } else {
+                break;
+            }
+        }
+
+        assert(k_minus_one_group.size() == 1);
+
+        std::ostringstream pwd;
+        std::string sep;
+        for (auto& pc : *k_minus_one_group.begin()) {
+            pwd << sep << pc;
+            sep = ",";
+        }
+
+        reportSolution(pwd.str()); // manually remove the last comma.
     }
 
     void parseBenchReset() override {
