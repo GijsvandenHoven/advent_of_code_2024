@@ -107,7 +107,7 @@ rws OR fts -> mpp
 wmq OR ngr -> knj
 x24 XOR y24 -> gfg
 tpf AND mgq -> tkc
-wvr XOR jgw -> fkp
+wvr XOR jgw -> z06
 brs AND nmr -> qpb
 x18 AND y18 -> qsw
 pnb OR vjh -> sfh
@@ -153,7 +153,7 @@ rqt XOR snv -> z22
 jqv AND cnd -> rpw
 x33 AND y33 -> vtd
 ctw XOR knj -> z12
-bpp OR ghf -> z06
+bpp OR ghf -> fkp
 ffn AND rdj -> shc
 cfw OR tnc -> sgr
 wdm AND psv -> fwc

@@ -84,15 +84,10 @@ CLASS_DEF(DAY) {
             lbl3 = read.str();
             read.str("");
 
-            // std::cout << "gate: " << lbl1 << " " << op << " " << lbl2 << " -> " << lbl3 << "\n";
             gates[lbl3].op = ops.find(op)->second;
             gates[lbl3].first = lbl1;
             gates[lbl3].second = lbl2;
             gates[lbl3].lbl = lbl3;
-        }
-
-        for (auto& [k,v] : gates) {
-            std::cout << k << "(" << v.lbl << "): " << v.first << ", " << v.second << " -> " << v.out << "\n";
         }
     }
 
@@ -105,37 +100,38 @@ CLASS_DEF(DAY) {
         int64_t i = 0;
         int64_t out = 0;
         std::unordered_map<std::string, Gate>::const_iterator x;
-        while ((x = values.find(to_str(i))) != values.end()) {
-            out += static_cast<int64_t>(x->second.out) << i;
+        while ((x = values.find(to_str(static_cast<int>(i)))) != values.end()) {
+            auto value = static_cast<int64_t>(x->second.out);
+
+            if (value == -1) throw std::logic_error("Not all z-values were set");
+
+            out += value << i;
             ++i;
         }
 
         return out;
     }
 
-    void v1() const override {
+    static void simulate_gates(auto& copy) {
         std::unordered_map<std::string, int> availability;
-        auto copy = gates;
         for (auto& [k,v] : copy) {
             if (v.is_source()) continue;
 
             availability[k] = 0;
 
             if (copy.find(v.first)->second.out != -1) {
-                availability[k]++;
+                ++availability[k];
             }
             if (copy.find(v.second)->second.out != -1) {
-                availability[k]++;
+                ++availability[k];
             }
-        }
-
-        for (auto& [k, v] : availability) {
-            std::cout << k << ", " << v << "\n";
         }
 
         while (! availability.empty()) {
             auto iter = std::find_if(availability.begin(), availability.end(), [](auto& entry){ return entry.second == 2; });
-            std::cout << "consider " << iter->first << "\n";
+
+            if (iter == availability.end()) throw std::logic_error("Ran out of work, impossible.");
+
             auto& outgate = copy.find(iter->first)->second;
             auto& ingate1 = copy.find(outgate.first)->second;
             auto& ingate2 = copy.find(outgate.second)->second;
@@ -143,25 +139,66 @@ CLASS_DEF(DAY) {
             if (ingate1.out == -1 || ingate2.out == -1) throw std::logic_error("cannot be.");
 
             outgate.out = outgate.op(ingate1.out, ingate2.out);
-            std::cout << outgate.lbl << " is set to " << outgate.out << "\n";
+            // std::cout << outgate.lbl << " is set to " << outgate.out << "\n";
             availability.erase(iter);
 
             // only do this after erasing, or you invalidate the iterator.
             for (auto& [k,v] : availability) {
                 auto& affected = copy.find(k)->second;
                 if (affected.first == outgate.lbl || affected.second == outgate.lbl) {
-                    std::cout << "This affects " << affected.lbl << " who was " << v << "\n";
+                    // std::cout << "This affects " << affected.lbl << " who was " << v << "\n";
                     v++;
                 }
             }
         }
+    }
 
-        // too low: 1499957451
+    void v1() const override {
+        auto copy = gates;
+        simulate_gates(copy);
+
         reportSolution(get_value(copy));
     }
 
+    // 0 + 0 = 00
+    // 1 + 1 = 10
+    // 1 + 0 = 01
+    // 0 + 1 = 01
+
+    // swap # 1: fkp, z06
+    // reminder to self: We edited the input txt to do the swaps.
     void v2() const override {
-        reportSolution(0);
+        auto copy = gates;
+
+        auto reset = [&copy]() {
+            for (auto& [k, v] : copy) {
+                if (v.out != -1) {
+                    v.out = 0;
+                }
+            }
+        };
+
+        auto to_str = [](int i, char l) {
+            return std::string(1, l) + ((i < 10) ? "0" : "") + std::to_string(i);
+        };
+
+        for (int i = 0; i < 45; ++i) {
+            {
+                copy = gates;
+                reset();
+                copy[to_str(i, 'x')].out = 1;
+                copy[to_str(i, 'y')].out = 1;
+                simulate_gates(copy);
+                int64_t expected = 1LL << (i+1);
+                int64_t actual = get_value(copy);
+                if (expected != actual) {
+                    std::cout << to_str(i, '_') << " is sus! got " << actual << " expected " << expected << "\n";
+                } else {
+                    std::cout << to_str(i, '_') << " OK.\n";
+                }
+            }
+        }
+        reportSolution(get_value(copy));
     }
 
     void parseBenchReset() override {
