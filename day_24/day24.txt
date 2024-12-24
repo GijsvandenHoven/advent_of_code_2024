@@ -205,7 +205,7 @@ x09 XOR y09 -> sfp
 y28 AND x28 -> wpw
 x40 XOR y40 -> mkc
 hsn AND dgg -> snc
-jpp XOR stv -> ngr
+jpp XOR stv -> z11
 mjb OR cpc -> gfj
 rcs XOR rnh -> z28
 sfp XOR sbq -> z09
@@ -228,7 +228,7 @@ nht XOR hsp -> z39
 wrv XOR qgd -> z30
 y07 XOR x07 -> pkh
 tdv OR krj -> hsp
-stv AND jpp -> z11
+stv AND jpp -> ngr
 x27 AND y27 -> mhv
 bdc XOR bbd -> z33
 x12 XOR y12 -> ctw

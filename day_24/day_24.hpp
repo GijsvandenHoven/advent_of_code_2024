@@ -166,6 +166,7 @@ CLASS_DEF(DAY) {
     // 0 + 1 = 01
 
     // swap # 1: fkp, z06
+    // swap # 2: ngr, z11
     // swap # 3: mfm, z31
     // reminder to self: We edited the input txt to do the swaps.
     void v2() const override {
