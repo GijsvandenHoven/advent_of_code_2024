@@ -144,7 +144,7 @@ qvt XOR qqv -> z14
 y18 XOR x18 -> mkt
 bwk OR krn -> pqf
 nhs XOR cqq -> z41
-y31 AND x31 -> z31
+y31 AND x31 -> mfm
 y23 AND x23 -> bwk
 sfh AND pmf -> ctp
 rvw AND dtb -> sgv
@@ -173,7 +173,7 @@ nhd OR pnk -> mdn
 hjc OR hth -> pgc
 x20 AND y20 -> qtq
 gcd XOR mdn -> z44
-mgq XOR tpf -> mfm
+mgq XOR tpf -> z31
 x30 AND y30 -> bbk
 dmh AND vfj -> cpc
 x44 AND y44 -> gvk
