@@ -168,6 +168,7 @@ CLASS_DEF(DAY) {
     // swap # 1: fkp, z06
     // swap # 2: ngr, z11
     // swap # 3: mfm, z31
+    // swap # 4: bpt, krj
     // reminder to self: We edited the input txt to do the swaps.
     void v2() const override {
         auto copy = gates;

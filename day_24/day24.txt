@@ -197,7 +197,7 @@ rgj OR bph -> vfj
 psv XOR wdm -> z03
 dnc OR vtd -> mvb
 gcn AND tqf -> krn
-y38 XOR x38 -> krj
+y38 XOR x38 -> bpt
 x24 AND y24 -> vjh
 y41 AND x41 -> vmr
 jgw AND wvr -> ghf
@@ -286,7 +286,7 @@ hsn XOR dgg -> z37
 qsw OR rsd -> mst
 sgv OR qnf -> stv
 y01 AND x01 -> hth
-y38 AND x38 -> bpt
+y38 AND x38 -> krj
 rgb AND mkc -> nfq
 y33 XOR x33 -> bbd
 tns XOR chq -> z26
