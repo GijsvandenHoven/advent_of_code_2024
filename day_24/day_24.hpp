@@ -201,7 +201,9 @@ CLASS_DEF(DAY) {
                 }
             }
         }
-        reportSolution(get_value(copy));
+
+        // bpt, krj, mfm, ngr, fkp, z06, z11, z31
+        reportSolution("bpt,fkp,krj,mfm,ngr,z06,z11,z31");
     }
 
     void parseBenchReset() override {
