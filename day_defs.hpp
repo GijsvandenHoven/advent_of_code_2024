@@ -57,8 +57,8 @@
 #include "day_23/day_23.hpp"
 // PLACEHOLD(24)
 #include "day_24/day_24.hpp"
-PLACEHOLD(25)
-// #include "day_25/day_25.hpp"
+// PLACEHOLD(25)
+#include "day_25/day_25.hpp"
 
 namespace DayMap {
     static const std::map<int, std::function<std::unique_ptr<Day>()>> NtoDay = {
