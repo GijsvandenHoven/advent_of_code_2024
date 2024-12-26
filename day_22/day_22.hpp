@@ -87,9 +87,8 @@ CLASS_DEF(DAY) {
         };
 
         int best_value = 0;
-#pragma omp parallel for default(none) shared(std::cout, best_value, sequences, value_of_sequence)
+#pragma omp parallel for schedule(dynamic) reduction(max:best_value) default(none) shared(sequences, value_of_sequence)
         for (int8_t i = -9; i <= 9; ++i) {
-            // std::osyncstream(std::cout) << "Thread " << omp_get_thread_num() << " Working on " << static_cast<int>(i) << "\n";
             for (int8_t j = -9; j <= 9; ++j) {
                 for (int8_t k = -9; k <= 9; ++k) {
                     for (int8_t l = -9; l <= 9; ++l) {
@@ -98,7 +97,6 @@ CLASS_DEF(DAY) {
                         for (const auto& s : sequences) {
                             total_value_of_seq += value_of_sequence(seq, s);
                         }
-#pragma omp critical
                         best_value = std::max(best_value, total_value_of_seq);
                     }
                 }

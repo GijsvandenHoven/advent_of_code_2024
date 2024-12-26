@@ -1,0 +1,75 @@
+Day 1 parse mean (median): 202 us (197 us). Sample Size: 10000
+Day 1 part 1 mean (median): 156 ns (157 ns). Sample Size: 10000
+Day 1 part 2 mean (median): 2.21 us (2.16 us). Sample Size: 10000
+Day 2 parse mean (median): 357 us (357 us). Sample Size: 10000
+Day 2 part 1 mean (median): 4.28 us (4.25 us). Sample Size: 10000
+Day 2 part 2 mean (median): 5.40 us (5.43 us). Sample Size: 10000
+Day 3 parse mean (median): 237 us (244 us). Sample Size: 10000
+Day 3 part 1 mean (median): 170 us (169 us). Sample Size: 10000
+Day 3 part 2 mean (median): 172 us (171 us). Sample Size: 10000
+Day 4 parse mean (median): 6.44 us (6.49 us). Sample Size: 10000
+Day 4 part 1 mean (median): 233 us (231 us). Sample Size: 10000
+Day 4 part 2 mean (median): 1.00 ms (1.00 ms). Sample Size: 10000
+Day 5 parse mean (median): 244 us (244 us). Sample Size: 2500
+Day 5 part 1 mean (median): 924 us (914 us). Sample Size: 2500
+Day 5 part 2 mean (median): 3.14 ms (3.13 ms). Sample Size: 2500
+Day 6 parse mean (median): 6.22 us (6.15 us). Sample Size: 1000
+Day 6 part 1 mean (median): 24.8 us (25.6 us). Sample Size: 1000
+Day 6 part 2 mean (median): 42.1 ms (42.5 ms). Sample Size: 1000
+Day 7 parse mean (median): 418 us (424 us). Sample Size: 2500
+Day 7 part 1 mean (median): 788 us (772 us). Sample Size: 2500
+Day 7 part 2 mean (median): 16.1 ms (16.3 ms). Sample Size: 2500
+Day 8 parse mean (median): 5.92 us (5.77 us). Sample Size: 10000
+Day 8 part 1 mean (median): 7.88 us (7.68 us). Sample Size: 10000
+Day 8 part 2 mean (median): 64.8 us (60.6 us). Sample Size: 10000
+Day 9 parse mean (median): 20.5 us (20.3 us). Sample Size: 1000
+Day 9 part 1 mean (median): 410 us (404 us). Sample Size: 1000
+Day 9 part 2 mean (median): 37.2 ms (37.3 ms). Sample Size: 1000
+Day 10 parse mean (median): 327 us (320 us). Sample Size: 10000
+Day 10 part 1 mean (median): 323 us (326 us). Sample Size: 10000
+Day 10 part 2 mean (median): 542 us (540 us). Sample Size: 10000
+Day 11 parse mean (median): 927 ns (888 ns). Sample Size: 500
+Day 11 part 1 mean (median): 597 us (605 us). Sample Size: 500
+Day 11 part 2 mean (median): 38.6 ms (38.7 ms). Sample Size: 500
+Day 12 parse mean (median): 6.28 us (6.29 us). Sample Size: 1000
+Day 12 part 1 mean (median): 9.46 ms (9.39 ms). Sample Size: 1000
+Day 12 part 2 mean (median): 20.0 ms (19.8 ms). Sample Size: 1000
+Day 13 parse mean (median): 127 us (125 us). Sample Size: 25
+Day 13 part 1 mean (median): 1.14 ms (1.14 ms). Sample Size: 25
+Day 13 part 2 mean (median): 5.42 s (5.32 s). Sample Size: 25
+Day 14 parse mean (median): 143 us (144 us). Sample Size: 10000
+Day 14 part 1 mean (median): 2.36 us (2.35 us). Sample Size: 10000
+Day 14 part 2 mean (median): 31.5 us (29.8 us). Sample Size: 10000
+Day 15 parse mean (median): 134 us (132 us). Sample Size: 10000
+Day 15 part 1 mean (median): 174 us (169 us). Sample Size: 10000
+Day 15 part 2 mean (median): 225 us (221 us). Sample Size: 10000
+Day 16 parse mean (median): 21.7 ms (21.9 ms). Sample Size: 1000
+Day 16 part 1 mean (median): 59.5 ms (56.7 ms). Sample Size: 1000
+Day 16 part 2 mean (median): 59.1 ms (58.0 ms). Sample Size: 1000
+Day 17 parse mean (median): 18.0 ns (18.0 ns). Sample Size: 10000
+Day 17 part 1 mean (median): 479 ns (469 ns). Sample Size: 10000
+Day 17 part 2 mean (median): 211 us (211 us). Sample Size: 10000
+Day 18 parse mean (median): 63.5 us (63.4 us). Sample Size: 25
+Day 18 part 1 mean (median): 1.29 ms (1.27 ms). Sample Size: 25
+Day 18 part 2 mean (median): 3.10 s (3.10 s). Sample Size: 25
+Day 19 parse mean (median): 27.2 us (26.9 us). Sample Size: 1000
+Day 19 part 1 mean (median): 8.55 ms (8.46 ms). Sample Size: 1000
+Day 19 part 2 mean (median): 17.1 ms (16.9 ms). Sample Size: 1000
+Day 20 parse mean (median): 290 us (278 us). Sample Size: 100
+Day 20 part 1 mean (median): 396 us (399 us). Sample Size: 100
+Day 20 part 2 mean (median): 285 ms (285 ms). Sample Size: 100
+Day 21 parse mean (median): 562 ns (555 ns). Sample Size: 10000
+Day 21 part 1 mean (median): 1.47 us (1.44 us). Sample Size: 10000
+Day 21 part 2 mean (median): 1.68 us (882 ns). Sample Size: 10000
+Day 22 parse mean (median): 65.2 us (63.6 us). Sample Size: 5
+Day 22 part 1 mean (median): 20.8 ms (20.8 ms). Sample Size: 5
+Day 22 part 2 mean (median): 74.7 s (74.1 s). Sample Size: 5
+Day 23 parse mean (median): 2.79 ms (2.59 ms). Sample Size: 5
+Day 23 part 1 mean (median): 1.49 ms (1.47 ms). Sample Size: 5
+Day 23 part 2 mean (median): 2.79 s (2.74 s). Sample Size: 5
+Day 24 parse mean (median): 196 us (190 us). Sample Size: 10000
+Day 24 part 1 mean (median): 825 us (811 us). Sample Size: 10000
+Day 24 part 2 mean (median): 33.4 ms (33.7 ms). Sample Size: 10000
+Day 25 parse mean (median): 76.2 us (75.8 us). Sample Size: 10000
+Day 25 part 1 mean (median): 221 us (223 us). Sample Size: 10000
+Day 25 part 2 mean (median): 16.0 ns (17.0 ns). Sample Size: 10000

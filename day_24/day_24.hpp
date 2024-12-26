@@ -7,6 +7,8 @@
 
 #define DAY 24
 
+#define D24_PRINT_ANALYSIS false
+
 NAMESPACE_DEF(DAY) {
 
 inline std::map<std::string, std::function<int(int,int)>> ops = {
@@ -186,19 +188,21 @@ CLASS_DEF(DAY) {
         };
 
         for (int i = 0; i < 45; ++i) {
-            {
-                copy = gates;
-                reset();
-                copy[to_str(i, 'x')].out = 1;
-                copy[to_str(i, 'y')].out = 1;
-                simulate_gates(copy);
-                int64_t expected = 1LL << (i+1);
-                int64_t actual = get_value(copy);
-                if (expected != actual) {
-                    std::cout << to_str(i, '_') << " is sus! got " << actual << " expected " << expected << "\n";
-                } else {
-                    std::cout << to_str(i, '_') << " OK.\n";
-                }
+            copy = gates;
+            reset();
+            copy[to_str(i, 'x')].out = 1;
+            copy[to_str(i, 'y')].out = 1;
+            simulate_gates(copy);
+            int64_t expected = 1LL << (i+1);
+            int64_t actual = get_value(copy);
+            if (expected != actual) {
+#if D24_PRINT_ANALYSIS
+                std::cout << to_str(i, '_') << " is sus! got " << actual << " expected " << expected << "\n";
+#endif
+            } else {
+#if D24_PRINT_ANALYSIS
+                std::cout << to_str(i, '_') << " OK.\n";
+#endif
             }
         }
 

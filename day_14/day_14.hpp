@@ -167,17 +167,17 @@ CLASS_DEF(DAY) {
         // }
         // std::cout << total << "\n";
 
-        std::ofstream output ("day14.txt");
-        int sec = 0;
-        while (! tree(botpos)) {
-
-            print_bots(botpos, output, sec);
-            step(botpos, mut_bots);
-            ++sec;
-
-            if (sec > 100000) break;
-            // std::cout << sec << "\n";
-        }
+        // std::ofstream output ("day14.txt");
+        // int sec = 0;
+        // while (! tree(botpos)) {
+        //
+        //     print_bots(botpos, output, sec);
+        //     step(botpos, mut_bots);
+        //     ++sec;
+        //
+        //     if (sec > 100000) break;
+        //     // std::cout << sec << "\n";
+        // }
 
 
         // concluded with the E.Y.E.B.A.L.L. Algorithm.

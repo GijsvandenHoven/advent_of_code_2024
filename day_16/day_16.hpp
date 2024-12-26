@@ -279,7 +279,17 @@ CLASS_DEF(DAY) {
     }
 
     void parseBenchReset() override {
+        // if you do not do this, the smart pointer holds on to its memory.
+        for (auto& layer : graph) {
+            for (auto& [k,v] : layer) {
+                v->out.clear();
+            }
+        }
 
+        // I don't think this is necessary, but we are here now anyway so...
+        for (auto& layer : graph) {
+            layer.clear();
+        }
     }
 
     private:

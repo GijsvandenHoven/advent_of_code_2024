@@ -153,7 +153,7 @@ CLASS_DEF(DAY) {
     }
 
     void parseBenchReset() override {
-
+        graph.clear();
     }
 
     private:

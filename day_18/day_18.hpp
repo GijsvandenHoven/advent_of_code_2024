@@ -124,7 +124,7 @@ CLASS_DEF(DAY) {
 
     void parseBenchReset() override {
         spots.clear();
-
+        grid = std::array<std::array<int, grid_size>, grid_size> {};
     }
 
     private:

@@ -279,7 +279,9 @@ CLASS_DEF(DAY) {
     }
 
     void parseBenchReset() override {
-
+        state_machine_p1.clear();
+        state_machine_p2.clear();
+        memory.clear();
     }
 
     private:

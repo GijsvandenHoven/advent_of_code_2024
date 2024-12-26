@@ -594,17 +594,13 @@ CLASS_DEF(DAY) {
 
             std::vector<Dir> current = std::move(final_seq);
             std::vector<Dir> next;
-            for (int i = 0; i < 24; ++i) {
-                std::cout << i << "\n";
-                std::cout << current.size() << "\n";
+            for (int i = 0; i < 1; ++i) {
                 generate_step(current, next);
                 current = std::move(next);
                 next.clear(); // i dont think this is necessary? im not sure about move semantics and husk objects anymore.
             }
 
             // we now have one more layer to go, let's not generate it. calculate this.
-            std::cout << "Done grinding with " << current.size() << " items\n";
-
 
             auto decider = [](Dir from, Dir to) {
                 switch (from) {
@@ -766,6 +762,8 @@ CLASS_DEF(DAY) {
 
             complexity += this_one;
         }
+#else
+        std::cout << "Day 21's P2 answer is " << 307055584161760LL << ": Brute forcing this with my solution takes 100GB ram (64G swapfile) and > 1 hour.\n";
 #endif
         reportSolution(complexity);
     }

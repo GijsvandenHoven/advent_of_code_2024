@@ -77,8 +77,6 @@ NAMESPACE_DEF(DAY) {
         }
 
         void v2() const override {
-            // don't do that, kills your computer.
-
             int goal = 75;
             std::vector<std::map<int64_t, int64_t>> cache(goal + 1);
             int64_t total = 0;
